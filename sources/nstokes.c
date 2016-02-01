@@ -402,6 +402,7 @@ int main(int argc,char **argv) {
   signal(SIGBUS,excfun);
 
   /* init structure */
+  memset(&nsst,0,sizeof(NSst));
   memset(&nsst.mesh,0,sizeof(Mesh));
   memset(&nsst.sol,0,sizeof(Sol));
   nsst.sol.cl  = (Cl*)calloc(NS_CL,sizeof(Cl));
