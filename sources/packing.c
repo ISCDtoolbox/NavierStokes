@@ -97,7 +97,7 @@ int pack_3d(NSst *nsst) {
 /* mesh renumbering and packing */
 int pack_2d(NSst *nsst) {
   pTria     pt;
-  pEdge     pa;
+  pEdge     pa,pb;
   double    l,m,w[2];
   int       i,k,nf,id,dof;
 
@@ -133,11 +133,16 @@ int pack_2d(NSst *nsst) {
         memcpy(&nsst->mesh.point[k],&nsst->mesh.point[0],sizeof(Point));
         nsst->mesh.point[k].new  = nf;
         nsst->mesh.point[nf].new = k;
-        
+
         if ( nsst->sol.u ) {
           memcpy(&w,&nsst->sol.u[2*(nf-1)],2*sizeof(double));
           memcpy(&nsst->sol.u[2*(nf-1)],&nsst->sol.u[2*(k-1)],2*sizeof(double));
           memcpy(&nsst->sol.u[2*(k-1)],&w,2*sizeof(double));
+        }
+        if ( nsst->sol.p ) {
+          w[0] = nsst->sol.p[nf-1];
+          nsst->sol.p[nf-1] = nsst->sol.p[k-1];
+          nsst->sol.p[k-1]  = w[0];
         }
       }
       nf--;
@@ -160,12 +165,28 @@ int pack_2d(NSst *nsst) {
   }
   nsst->info.nt = nf;
 
-  /* simply renum edges */
+  /* compress and renum edges */
   for (k=1; k<=nsst->info.na; k++) {
     pa = &nsst->mesh.edge[k];
-    pa->v[0] = nsst->mesh.point[pa->v[0]].new;
-    pa->v[1] = nsst->mesh.point[pa->v[1]].new;
+    for (i=0; i<3; i++)  pa->v[i] = nsst->mesh.point[pa->v[i]].new;
   }
+  nf = nsst->info.na;
+  k  = 0;
+  while ( ++k <= nf ) {
+    pa = &nsst->mesh.edge[k];
+    if ( (pa->v[0] > nsst->info.np || pa->v[0] == 0) || 
+         (pa->v[1] > nsst->info.np || pa->v[1] == 0) ) {
+      pb = &nsst->mesh.edge[nf];
+      while ( ((pb->v[0] > nsst->info.np || pb->v[0] == 0) || 
+               (pb->v[1] > nsst->info.np || pb->v[1] == 0)) && (k < nf) ) {
+        nf--;
+        pb = &nsst->mesh.edge[nf];
+      }
+      memcpy(&nsst->mesh.edge[k],&nsst->mesh.edge[nf],sizeof(Edge));
+      nf--;
+    }
+  }
+  nsst->info.na = nf;
 
   if ( nsst->info.verb != '0' ) {
     fprintf(stdout,"%d vertices",nsst->info.np);
@@ -185,7 +206,8 @@ int unpack(NSst *nsst) {
   int     k,dim;
 	char    i;
 
-  if ( nsst->info.verb != '0' ) {
+  if ( nsst->info.np == nsst->info.npi )  return(1);
+  else if ( nsst->info.verb != '0' ) {
     fprintf(stdout,"    Uncompressing data: ");
     fflush(stdout);
   }
@@ -199,6 +221,7 @@ int unpack(NSst *nsst) {
       memcpy(&nsst->sol.u[dim*(ppt->new-1)+0],&w,dim*sizeof(double));
     }
   }
+
   nsst->info.np = nsst->info.npi;
   nsst->info.na = nsst->info.nai;
   nsst->info.nt = nsst->info.nti;

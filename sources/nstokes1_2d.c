@@ -412,6 +412,7 @@ static int setSlip(NSst *nsst,pCsr A) {
 
     ier = (nsst->info.typ == P1) ? matPNe_P1(a,b,PNe) : matPNe_P2(a,b,PNe);
     if ( !ier )  continue;
+
     /* P1b P1 */
     for (j=0; j<2; j++) {
       for (l=0; l<2; l++) {
