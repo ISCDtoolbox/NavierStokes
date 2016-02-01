@@ -163,6 +163,10 @@ int pack_2d(NSst *nsst) {
   /* simply renum edges */
   for (k=1; k<=nsst->info.na; k++) {
     pa = &nsst->mesh.edge[k];
+    if ( pa->v[0]==51 )
+      printf("point 51 devient : %d\n",nsst->mesh.point[pa->v[0]].new);
+    if ( pa->v[1]==51 )
+      printf("point 51 devient : %d\n",nsst->mesh.point[pa->v[1]].new);
     pa->v[0] = nsst->mesh.point[pa->v[0]].new;
     pa->v[1] = nsst->mesh.point[pa->v[1]].new;
   }

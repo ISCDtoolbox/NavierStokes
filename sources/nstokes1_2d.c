@@ -404,7 +404,7 @@ static int setSlip(NSst *nsst,pCsr A) {
     pa  = &nsst->mesh.edge[k];
     pcl = getCl(&nsst->sol,pa->ref,NS_edg);
     if ( !pcl || (pcl->typ != Slip) || (pcl->elt != NS_edg) )  continue;
-
+    if ( pa->v[0] > nsst->info.np || pa->v[1] > nsst->info.np ) continue;
     iga = 2*(pa->v[0]-1);
     igb = 2*(pa->v[1]-1);
     a = &nsst->mesh.point[pa->v[0]].c[0];
@@ -424,7 +424,7 @@ static int setSlip(NSst *nsst,pCsr A) {
 
     /* global friction term */
     if ( fabs(pcl->u[0]) < NS_EPSD )  continue;
-    
+
     ier = (nsst->info.typ == P1) ? matPFe_P1(a,b,PFe) : matPFe_P2(a,b,PFe);
     if ( !ier )  continue;
     for (j=0; j<2; j++) {
@@ -576,8 +576,9 @@ static double *rhsF_P1_2d(NSst *nsst) {
   }
   /* surface tension or atmosph. pressure */
   else if ( (nsst->sol.cltyp & Tension) || (nsst->sol.cltyp & AtmPres) ) {
-    Pa = 1.0; /* for now */
+    Pa = -1.0; /* for now */
     for (k=1; k<=nsst->info.np; k++) {
+      nc  = 0;
       ppt = &nsst->mesh.point[k];
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver);
       if ( !pcl )  continue;
@@ -587,10 +588,13 @@ static double *rhsF_P1_2d(NSst *nsst) {
          F[2*(k-1)+1] -= -0.5 * pcl->u[0] * len * kappa * n[1];
       }
       else if ( pcl->typ == AtmPres ) {
-         F[2*(k-1)+0] -= -0.5 * len * Pa * n[0];
-         F[2*(k-1)+1] -= -0.5 * len * Pa * n[1];
+         len = 0.1;
+         F[2*(k-1)+0] -= -0.5 * len * pcl->u[0] * n[0];
+         F[2*(k-1)+1] -= -0.5 * len * pcl->u[1] * n[1];
       }
+      nc++;
     }
+    if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d values (tension|atmPres)\n",nc);
   }
 
   /* nodal boundary conditions */
