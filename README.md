@@ -57,7 +57,7 @@ The options and flags are:
   -N           Navier-Stokes solver (default Stokes)
   -dt step     time step (time units)
   -mt val      max time (time units)
-  -nt n        max number of time steps
+  -nt n        number of time steps
   -n nit       number of iterations max for convergence
   -r res       value of the residual (Krylov space) for convergence
   -t typ       specify the type of FE space: 1: P1bP1(*), 2: P2P1
