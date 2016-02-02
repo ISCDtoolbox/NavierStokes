@@ -50,7 +50,7 @@ After compiling nstokes as described above, you should have an executable file i
 The square braces indicate optional arguments. Some commands have flags, some others do not.
 
 The options and flags are:
-
+```
   --help       show the syntax and exit.
   --version    show the version and date of release and exit.
 
@@ -68,6 +68,7 @@ The options and flags are:
   param.elas     name of file containing elasticity parameters
   data.sol       name of file containing the initial solution or boundary conditions
   output.sol     name of the output file (displacement field)
+```
 
 A full description of all parameters and options that can be specified in the command line or in a parameter file [file.nstokes] can be found in the project [wiki](https://github.com/ICStoolbox/NavierStokes/wiki).
 
@@ -78,13 +79,29 @@ You can test the installation and look at examples by entering the [demos](demos
     nstokes cavity.mesh        # or equivalently:  nstokes cavity.mesh -p cavity.nstokes -o cavity.sol
 
 that will produce an output that will look like:
+```
+user:~/code/NavierStokes/demos/2d$ nstokes cavity.mesh
+ - NSTOKES, Release 5.2a, Jan. 29, 2016
+   (C) Copyright 2006- , ICS-SU
 
-    user:~/code/NavierStokes/demos/2d$ nstokes cavity 
-     - NSTOKES, Release 5.2a, Jan.29, 2016
-       (C) Copyright 2006- , ICS-SU
-    
+ - LOADING DATA
+    cavity.mesh: 555 vertices, 74 edges, 1034 triangles
+    cavity.nstokes: 2 parameters
+ - COMPLETED: 0.002s
 
-     ** Cumulative time: 6.990s.
+ ** MODULE NSTOKES: 5.2a
+    Matrix and right-hand side assembly
+    Solving linear system:
+     pressure: res=6.862905e-07, nit=36
+     velocity: res=7.920541e-07, nit=26
+ ** COMPLETED: 0.120s
+
+ - WRITING DATA
+    cavity.solb: 555 data vectors
+ - COMPLETED: 0.008s
+
+ ** Cumulative time: 0.130s.
+```
 
 #### Authors & contributors
 * nstokes has been initiated by Thi Thu Cuc Bui, Dena Kazerani, Thi Thanh Mai Ta and Pascal Frey (Université Pierre et Marie Curie).
