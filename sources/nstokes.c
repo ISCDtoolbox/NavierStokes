@@ -53,7 +53,7 @@ static void usage(char *prog) {
   -N           Navier-Stokes solver\n\
   -dt step     time step (time units)\n\
   -mt val      max time (time units)\n\
-  -nt n        max number of time steps\n\
+  -nt n        number of time steps\n\
   -n nit       number of iterations max for convergence\n\
   -r res       value of the residual (Krylov space) for convergence\n\
   -t typ       specify the type of FE space: 1: P1bP1(*), 2: P2P1\n\
@@ -224,7 +224,14 @@ static int parsar(int argc,char *argv[],NSst *nsst) {
 
   /* check params */
   if ( nsst->mesh.name == NULL ) {
-    fprintf(stderr,"%s: missing argument\n",argv[0]);
+    if ( nsst->info.verb != '0' )  fprintf(stderr,"%s: missing argument\n",argv[0]);
+    usage(argv[0]);
+  }
+
+  /* set time stepping */
+  if ( (nsst->sol.dt > 0.0) && (nsst->sol.nt == 0) ) {
+    if ( nsst->info.verb != '0' )
+      fprintf(stdout," # incorrect time stepping: %d it, %f dt\n",nsst->sol.nt,nsst->sol.dt);
     usage(argv[0]);
   }
 
@@ -389,6 +396,7 @@ int main(int argc,char **argv) {
   int      ier;
   char     stim[32];
 
+  memset(&nsst,0,sizeof(NSst));
   tminit(nsst.info.ctim,TIMEMAX);
   chrono(ON,&nsst.info.ctim[0]);
 
@@ -402,7 +410,6 @@ int main(int argc,char **argv) {
   signal(SIGBUS,excfun);
 
   /* init structure */
-  memset(&nsst,0,sizeof(NSst));
   memset(&nsst.mesh,0,sizeof(Mesh));
   memset(&nsst.sol,0,sizeof(Sol));
   nsst.sol.cl  = (Cl*)calloc(NS_CL,sizeof(Cl));

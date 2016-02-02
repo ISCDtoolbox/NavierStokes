@@ -24,12 +24,76 @@ int hashel_3d(NSst *nsst) {
 
 
 int addnod_3d(NSst *nsst) {
+  pTetra   pt;
+  int      k,na;
+
+  if ( nsst->info.verb == '+' )  fprintf(stdout,"    Adding nodes: ");
+
+  /* store P1b nodes */
+  if ( nsst->info.typ == P1 ) {
+    na = nsst->info.ne;
+    for (k=1; k<=nsst->info.ne; k++) {
+      pt = &nsst->mesh.tetra[k];
+      pt->v[4] = nsst->info.np + k;
+    }
+  }
+  /* create P2 nodes */
+  else {
+    
+  }
+
+  if ( nsst->info.verb == '+' )  fprintf(stdout," %d\n",na);
+
   
   return(1);
 }
 
 
-static int hcode_2d(Mesh *mesh,Htab *ht,int a,int b,int k,int i) {
+/* check for node na along edge a,b (create if needed) */
+static int hpush_2d(Htab *ht,int a,int b,int *na) {
+  Cell     *pc;
+  pTria     pt;
+  int       k,abmin,ia,ib,sum;
+  
+  sum = a+b;
+  if ( sum >= ht->nmax )  return(0);
+
+  /* check if edge ab stored */
+  pc = &ht->cell[sum];
+  ia = NS_MIN(a,b);
+  ib = NS_MAX(a,b);
+  /* existing edge: return node */
+  if ( pc->min == ia && pc->elt == ib) 
+    return(pc->ind);
+  else if ( pc->min ) {
+    while ( pc->nxt && pc->nxt < ht->nmax ) {
+      pc = &ht->cell[pc->nxt];
+      if ( pc->min == ia && pc->elt == ib )
+        return(pc->ind);
+    }
+    /* check for new node */
+    pc->nxt = ht->hnxt;
+    pc = &ht->cell[pc->nxt];
+    if ( ++ht->hnxt == ht->nmax ) {
+      ht->nmax *= 1.2;
+      ht->cell  = (Cell*)realloc(ht->cell,ht->nmax*sizeof(Cell));
+      assert(ht->cell);
+      for (k=ht->hnxt; k<ht->nmax; k++)  ht->cell[k].nxt = k+1;
+    }
+  }
+  /* create new node */  
+  *na = *na + 1;
+  pc->min = ia;
+  pc->elt = ib;
+  pc->ind = *na;
+  pc->nxt = 0;
+
+  return(*na);
+}
+
+
+/* insert edge a,b and update adjacent triangle */
+static int hcode_2d(Tria *tria,Htab *ht,int a,int b,int k,int i) {
   Cell     *pc;
   pTria     pt,pt1;
   int       abmin,adj,sum;
@@ -48,9 +112,9 @@ static int hcode_2d(Mesh *mesh,Htab *ht,int a,int b,int k,int i) {
   }
 
   /* analyze linked list */
-  pt  = &mesh->tria[k];
+  pt  = &tria[k];
   do {
-    pt1 = &mesh->tria[pc->elt];
+    pt1 = &tria[pc->elt];
     if ( pc->min == abmin ) {
       adj = pt1->adj[pc->ind];
       if ( !adj ) {
@@ -107,7 +171,7 @@ int hashel_2d(NSst *nsst) {
     for (i=0; i<3; i++) {
       i1 = (i+1) % 3;
       i2 = (i+2) % 3;
-      if ( !hcode_2d(&nsst->mesh,&ht,pt->v[i1],pt->v[i2],k,i) )  return(0);
+      if ( !hcode_2d(nsst->mesh.tria,&ht,pt->v[i1],pt->v[i2],k,i) )  return(0);
       na++;
     }
   }
@@ -136,8 +200,9 @@ int hashel_2d(NSst *nsst) {
 
 /* add nodes P1b or P2 to tables */
 int addnod_2d(NSst *nsst) {
+  Htab     ht;
   pTria    pt;
-  int      k,na;
+  int      i,k,na;
 
   if ( nsst->info.verb == '+' )  fprintf(stdout,"    Adding nodes: ");
 
@@ -151,7 +216,26 @@ int addnod_2d(NSst *nsst) {
   }
   /* create P2 nodes */
   else {
-    
+    /* alloc hash */
+    ht.nmax = (int)(3.2 * nsst->info.np);
+    ht.cell = (Cell*)calloc(ht.nmax+2,sizeof(Cell));
+    assert(ht.cell);
+
+    ht.hsiz = 2 * nsst->info.np;
+    ht.hnxt = ht.hsiz;
+    for (k=ht.hsiz; k<ht.nmax; k++)
+      ht.cell[k].nxt = k+1;
+
+    for (k=1; k<=nsst->info.nti; k++) {
+      pt = &nsst->mesh.tria[k];
+      for (i=0; i<3; i++) {
+        na = hpush_2d(&ht,pt->v[i],pt->v[(i+1) % 3],&nsst->info.na);
+        pt->v[i+3] = nsst->info.np + na;
+      }
+    }
+    na = nsst->info.na;
+
+    free(ht.cell);    
   }
 
   if ( nsst->info.verb == '+' )  fprintf(stdout," %d\n",na);

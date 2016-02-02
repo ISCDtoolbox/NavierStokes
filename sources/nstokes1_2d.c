@@ -392,7 +392,7 @@ static int matPFe_P2(double *a,double *b,double PFe[4][4]) {
 
 
 /* set slip condition */
-static int setSlip(NSst *nsst,pCsr A) {
+static int slipon_2d(NSst *nsst,pCsr A) {
   pEdge    pa;
   pCl      pcl;
   double  *a,*b,PNe[4][4],PFe[4][4];
@@ -525,7 +525,7 @@ static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
   
   /* slip boundary condition */
   if ( (nsst->sol.cltyp & Slip) && (nsst->info.na > 0) ) {
-    ier = setSlip(nsst,A);
+    ier = slipon_2d(nsst,A);
   }
   setTGV_2d(nsst,A);
   csrPack(A);
@@ -541,17 +541,15 @@ static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
 
 
 /* build right hand side vector and set boundary conds. */
-static double *rhsF_P1_2d(NSst *nsst) {
+static int rhsF_P1_2d(NSst *nsst,double *F) {
   pTria    pt;
   pEdge    pa;
   pPoint   ppt;
   pCl      pcl;
-  double  *F,*vp,area,len,n[2],w[2],*a,*b,*c,kappa,nu,rho,Pa;
+  double  *vp,area,len,n[2],w[2],*a,*b,*c,kappa,nu,rho,Pa;
   int      i,k,nc;
 
   if ( nsst->info.verb == '+' )  fprintf(stdout,"     gravity and body forces\n");
-  F = (double*)calloc(nsst->info.dim * (nsst->info.np+nsst->info.nt),sizeof(double));
-  assert(F);
 
   /* gravity as external force */
   if ( nsst->sol.cltyp & Gravity ) {
@@ -619,20 +617,56 @@ static double *rhsF_P1_2d(NSst *nsst) {
     if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d nodal values\n",nc);
   }
 
-  return(F);
+  return(1);
 }
 
 
 /* build right hand side vector and set boundary conds. */
-static double *rhsF_P2_2d(NSst *nsst) {
-  return(0);
+static int rhsF_P2_2d(NSst *nsst,double *F) {
+  return(1);
 }
+
+
+/* update RHS for unsteady NS: F^n = F + 1/dt u^n(X^n(x)) */
+static int rhsFu_2d(NSst *nsst,double *Fk) {
+  pTria    pt;
+  double  *a,*b,*c,area,d1,d2,idt,rho,nu;
+  int      i,k,dof,ig,off;
+  
+  dof = nsst->info.typ == P1 ? 4 : 6;
+  off = nsst->info.typ == P1 ? 0 : 3;
+  for (k=1; k<=nsst->info.nt; k++) {
+    pt = &nsst->mesh.tria[k];
+    getMat(&nsst->sol,pt->ref,&nu,&rho);
+
+    a = &nsst->mesh.point[pt->v[0]].c[0];
+    b = &nsst->mesh.point[pt->v[1]].c[0];
+    c = &nsst->mesh.point[pt->v[2]].c[0];
+    area = area_2d(a,b,c);
+    d1 = rho * area / (3.0 * nsst->sol.dt);
+    d2 = rho * area * 9.0 / (20.0 * nsst->sol.dt);
+    for (i=0; i<3; i++) {
+      ig = 2*(pt->v[i+off]-1);
+      Fk[ig+0] += d1*nsst->sol.u[ig+0];
+      Fk[ig+1] += d1*nsst->sol.u[ig+1];
+    }
+    if ( nsst->info.typ == P1 ) {
+      /* bubble part */
+      ig = 2*(pt->v[3]-1);
+      Fk[ig+0] += d2*nsst->sol.u[ig+0];
+      Fk[ig+1] += d2*nsst->sol.u[ig+1];
+    }
+  }
+  
+  return(1);
+}
+
 
 /* 2d Navier-Stokes */
 int nstokes1_2d(NSst *nsst) {
   Csr      A,B;
-  double  *F;
-  int      ier;
+  double  *F,*Fk,res;
+  int      ier,it,nit,sz;
   char     stim[32];
 
   /* -- Part I: matrix assembly */
@@ -642,48 +676,76 @@ int nstokes1_2d(NSst *nsst) {
 	if ( nsst->info.typ == P2 && !nsst->info.np2 ) {
 		nsst->info.np2 = hashel_2d(nsst);
 		if ( nsst->info.np2 == 0 ) {
-			fprintf(stdout," # Error on P2 nodes.\n");
+			fprintf(stdout," # error: no P2 node added.\n");
 			return(0);
 		}
 	}
 
   /* allocating memory (for dylib) */
+  sz = (nsst->info.typ == P1) ? nsst->info.npi+nsst->info.nti : nsst->info.npi+nsst->info.np2;
+
   if ( !nsst->sol.u ) {
-    if ( nsst->info.typ == P1 )
-      nsst->sol.u = (double*)calloc(nsst->info.dim*(nsst->info.npi+nsst->info.nti),sizeof(double));
-		else
-			nsst->sol.u = (double*)calloc(nsst->info.dim * (nsst->info.npi+nsst->info.np2),sizeof(double));
+    nsst->sol.u = (double*)calloc(nsst->info.dim*sz,sizeof(double));
     assert(nsst->sol.u);
 	  nsst->sol.p = (double*)calloc(nsst->info.npi,sizeof(double));
     assert(nsst->sol.p);
   }
 
-	/* unsteady problem: store solution u_n when computing u_n+1 */
-	if ( nsst->info.nt > 0 ) {
-	  if (nsst->info.typ == P1 )
-	    nsst->sol.un = (double*)calloc(nsst->info.dim*(nsst->info.npi+nsst->info.nti),sizeof(double));
-		else
-			nsst->sol.un = (double*)calloc(nsst->info.dim*(nsst->info.npi+nsst->info.np2),sizeof(double));
-	  assert(nsst->sol.un);
-	}
-
   /* build matrices */
   ier = matAB_2d(nsst,&A,&B);
   if ( !ier )  return(0);
-  F = nsst->info.typ == P1 ? rhsF_P1_2d(nsst) : rhsF_P2_2d(nsst);
-
-  /* free mesh structure + boundary conditions */
-  if ( nsst->info.mfree ) {
-		free(nsst->mesh.tria);
-    if ( nsst->info.na )  free(nsst->mesh.edge);
-    if ( !nsst->info.zip )  free(nsst->mesh.point);
-	}
-  /* if ( lsst->info.typ == P2 )  free(lsst->hash.item);*/
+  F = (double*)calloc(nsst->info.dim*sz,sizeof(double));
+  assert(F);
+  ier = nsst->info.typ == P1 ? rhsF_P1_2d(nsst,F) : rhsF_P2_2d(nsst,F);
 
   /* -- Part II: solver */
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    Solving linear system:\n");
-  ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,F,&nsst->sol.res,&nsst->sol.nit,nsst->info.verb);
 
+  /* steady-state */
+  if ( nsst->sol.dt < 0.0 ) {
+    if ( nsst->info.mfree ) {
+		  free(nsst->mesh.tria);
+      if ( nsst->info.na )  free(nsst->mesh.edge);
+      if ( !nsst->info.zip )  free(nsst->mesh.point);
+    }
+    /* Uzawa solver */
+    ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,F,&nsst->sol.res,&nsst->sol.nit,nsst->info.verb);
+  }
+  /* unsteady problem */
+  else {
+	  nsst->sol.un = (double*)calloc(nsst->info.dim*sz,sizeof(double));
+	  assert(nsst->sol.un);
+    Fk = (double*)calloc(nsst->info.dim*sz,sizeof(double));
+    assert(F);
+    it = 1;
+    do {
+      nsst->sol.tim += nsst->sol.dt;
+
+      /* copy solution at time u^n */
+      memcpy(nsst->sol.un,nsst->sol.u,nsst->info.dim*sz*sizeof(double));
+      
+      /* non-linear term: u_t + u\nabla u */
+
+      /* right-hand side */
+      memcpy(Fk,F,nsst->info.dim*sz*sizeof(double));
+      ier = rhsFu_2d(nsst,Fk);
+      ier = nsst->info.typ == P1 ? rhsF_P1_2d(nsst,Fk) : rhsF_P2_2d(nsst,Fk);
+
+      /* Uzawa solver */
+      res = nsst->sol.res;
+      nit = nsst->sol.nit;
+      ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,nsst->info.verb);
+    }
+    while ( ++it <= nsst->sol.nt );
+
+    /* free mesh structure */
+    if ( nsst->info.mfree ) {
+		  free(nsst->mesh.tria);
+      if ( nsst->info.na )  free(nsst->mesh.edge);
+      if ( !nsst->info.zip )  free(nsst->mesh.point);
+    }
+    free(Fk);
+  }
   free(F);
 
   return(ier > 0);
