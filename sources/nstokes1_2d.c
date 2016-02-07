@@ -720,11 +720,14 @@ int nstokes1_2d(NSst *nsst) {
     it = 1;
     do {
       nsst->sol.tim += nsst->sol.dt;
-
       /* copy solution at time u^n */
       memcpy(nsst->sol.un,nsst->sol.u,nsst->info.dim*sz*sizeof(double));
       
       /* non-linear term: u_t + u\nabla u */
+      if ( nsst->sol.sim == Navier ) {
+        ier = nsst->info.typ == P1 ? advect_P1_2d(nsst) : advect_P2_2d(nsst);
+        if ( !ier )  break;
+      }
 
       /* right-hand side */
       memcpy(Fk,F,nsst->info.dim*sz*sizeof(double));
@@ -735,6 +738,7 @@ int nstokes1_2d(NSst *nsst) {
       res = nsst->sol.res;
       nit = nsst->sol.nit;
       ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,nsst->info.verb);
+      if ( ier < 1 )  break;
     }
     while ( ++it <= nsst->sol.nt );
 

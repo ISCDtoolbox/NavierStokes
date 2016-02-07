@@ -112,6 +112,8 @@ int  addnod_2d(NSst *nsst);
 int  addnod_3d(NSst *nsst);
 pCl  getCl(pSol sol,int ref,int elt);
 int  getMat(pSol sol,int ref,double *nu,double *rho);
+int  advect_P1_2d(NSst *nsst);
+int  advect_P2_2d(NSst *nsst);
 int  nstokes1_2d(NSst *nsst);
 int  nstokes1_3d(NSst *nsst);
 

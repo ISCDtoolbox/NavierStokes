@@ -119,7 +119,7 @@ static int parsar(int argc,char *argv[],NSst *nsst) {
       case 'm':
         if ( !strcmp(argv[i],"-mt") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
-            nsst->sol.mt = atoi(argv[i]);
+            nsst->sol.mt = strtod(argv[i],NULL);
           else {
             fprintf(stderr,"%s: missing argument option\n",argv[0]);
             usage(argv[0]);
@@ -488,7 +488,7 @@ int main(int argc,char **argv) {
   /* solve */
   chrono(ON,&nsst.info.ctim[2]);
   if ( nsst.info.verb != '0' )
-    fprintf(stdout,"\n ** MODULE NSTOKES: %s\n",NS_VER);
+    fprintf(stdout,"\n ** MODULE NSTOKES: %s (%s)\n",NS_VER,nsst.sol.sim == Navier ? "Navier-Stokes" : "Stokes");
 
 	ier = NS_nstokes(&nsst);
 	if ( !ier )  return(1);
