@@ -80,7 +80,10 @@ static int locelt_2d(pMesh mesh,int nsd,double *c,double *cb) {
     if ( aire1 < eps ) {
       nsp = nsf;
       nsf = pt->adj[0] / 3;
-      continue;
+      if ( !nsf )
+        cb[0] = 0.0;
+      else
+        continue;
     }
     ax = p0->c[0] - c[0];
     ay = p0->c[1] - c[1];
@@ -88,13 +91,19 @@ static int locelt_2d(pMesh mesh,int nsd,double *c,double *cb) {
     if ( aire2 < eps ) {
       nsp = nsf;
       nsf = pt->adj[1] / 3;
-      continue;
+      if ( !nsf )
+        cb[1] = 0.0;
+      else
+        continue;
     }
     aire3 = sgn*dd - aire1 - aire2;
     if ( aire3 < eps ) {
       nsp = nsf;
       nsf = pt->adj[2] / 3;
-      continue;
+      if ( !nsf )
+        cb[2] = 0.0;
+      else
+        continue;
     }
     aire1 = NS_MAX(aire1,0.0);
     aire2 = NS_MAX(aire2,0.0);
