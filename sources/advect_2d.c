@@ -24,7 +24,7 @@ static inline int bar_2d(pPoint pp[3],double *c,int iel,double *cb) {
 }
 
 
-// return velocity P1_interpolation in v in element iv[3]
+/* return velocity P1_interpolation in v in element iv[3] */
 static inline double vecint_P1_2d(double *un,int *iv,double *cb,double *v) {
   double   *u0,*u1,*u2,dd;
 
@@ -35,7 +35,7 @@ static inline double vecint_P1_2d(double *un,int *iv,double *cb,double *v) {
   /* P1 interpolate of the speed */   
   v[0] = cb[0]*u0[0] + cb[1]*u1[0] + cb[2]*u2[0];  
   v[1] = cb[0]*u0[1] + cb[1]*u1[1] + cb[2]*u2[1];
-  dd = sqrt(v[0]*v[0] + v[1]*v[1]);
+  dd   = sqrt(v[0]*v[0] + v[1]*v[1]);
 
   return(dd);
 }
@@ -67,7 +67,7 @@ static int locelt_2d(pMesh mesh,int nsd,double *c,double *cb) {
     by = p2->c[1] - p0->c[1];
     dd = ax*by - ay*bx;
     sgn = dd > 0.0 ? 1 : -1;
-    eps = sgn == 1 ? NS_EPS*dd : -NS_EPS*dd;
+    eps = sgn == 1 ? -NS_EPS*dd : NS_EPS*dd;
 
     /* barycentric */
     bx = p1->c[0] - c[0];
@@ -131,7 +131,7 @@ static int locelt_2d(pMesh mesh,int nsd,double *c,double *cb) {
 static int travel_2d(NSst *nsst,double *cb,int *iel,double *dt) {
   pTria       pt;
   pPoint      p[3];
-  double      *u0,*u1,*u2,m[3],ddt,tol,ux,uy,c[2],cb1[3];
+  double     *u0,*u1,*u2,m[3],ddt,tol,ux,uy,c[2],cb1[3];
   int         k;
   char        i,i0,i1,i2;
 
