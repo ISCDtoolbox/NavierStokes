@@ -432,7 +432,7 @@ int main(int argc,char **argv) {
   /* parse command line */
   if ( !parsar(argc,argv,&nsst) )  return(1);
 
-  /* loading date */
+  /* loading data */
 	chrono(ON,&nsst.info.ctim[1]);
 
   if ( nsst.info.verb != '0' ) {

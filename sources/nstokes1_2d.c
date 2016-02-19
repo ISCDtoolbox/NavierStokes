@@ -2,14 +2,14 @@
 #include "sparse.h"
 
 
-/* find boundary conds in list */
-pCl getCl(pSol sol,int ref,int elt) {
+/* find boundary conds in list for given ref and type */
+pCl getCl(pSol sol,int ref,int elt,char typ) {
   pCl     pcl;
   int     i;
 
   for (i=0; i<sol->nbcl; i++) {
     pcl = &sol->cl[i];
-    if ( (pcl->ref == ref) && (pcl->elt == elt) )  return(pcl);
+    if ( (pcl->ref == ref) && (pcl->elt == elt) && (pcl->typ == typ) )  return(pcl);
   }
   return(0);
 }
@@ -54,8 +54,8 @@ static int setTGV_2d(NSst *nsst,pCsr A) {
   if ( nsst->sol.clelt & NS_ver ) {
     for (k=1; k<=nsst->info.np; k++) {
       ppt = &nsst->mesh.point[k];
-      pcl = getCl(&nsst->sol,ppt->ref,NS_ver);
-      if ( pcl && pcl->typ == Dirichlet ) {
+      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
+      if ( pcl ) {
         csrSet(A,2*(k-1)+0,2*(k-1)+0,NS_TGV);
         csrSet(A,2*(k-1)+1,2*(k-1)+1,NS_TGV);
       }
@@ -66,8 +66,8 @@ static int setTGV_2d(NSst *nsst,pCsr A) {
     dof = nsst->info.typ == P1 ? 2 : 3;
     for (k=1; k<=nsst->info.na; k++) {
       pa = &nsst->mesh.edge[k];
-      pcl = getCl(&nsst->sol,pa->ref,NS_edg);
-	    if ( pcl && pcl->typ == Dirichlet ) {
+      pcl = getCl(&nsst->sol,pa->ref,NS_edg,Dirichlet);
+	    if ( pcl ) {
         for (i=0; i<dof; i++) {
           csrSet(A,2*(pa->v[i]-1)+0,2*(pa->v[i]-1)+0,NS_TGV);
           csrSet(A,2*(pa->v[i]-1)+1,2*(pa->v[i]-1)+1,NS_TGV);
@@ -402,8 +402,8 @@ static int slipon_2d(NSst *nsst,pCsr A) {
 
   for (k=1; k<=nsst->info.na; k++) {
     pa  = &nsst->mesh.edge[k];
-    pcl = getCl(&nsst->sol,pa->ref,NS_edg);
-    if ( !pcl || (pcl->typ != Slip) || (pcl->elt != NS_edg) )  continue;
+    pcl = getCl(&nsst->sol,pa->ref,NS_edg,Slip);
+    if ( !pcl )  continue;
     if ( pa->v[0] > nsst->info.np || pa->v[1] > nsst->info.np ) continue;
     iga = 2*(pa->v[0]-1);
     igb = 2*(pa->v[1]-1);
@@ -546,7 +546,7 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
   pEdge    pa;
   pPoint   ppt;
   pCl      pcl;
-  double  *vp,area,len,n[2],w[2],*a,*b,*c,kappa,nu,rho,Pa;
+  double  *vp,area,len,n[2],w[2],*a,*b,*c,kappa,nu,rho;
   int      i,k,nc;
 
   if ( nsst->info.verb == '+' )  fprintf(stdout,"     gravity and body forces\n");
@@ -573,24 +573,28 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
     }
     if ( nsst->info.verb == '+' )  fprintf(stdout,"     %d gravity values assigned\n",nc);
   }
-  /* surface tension or atmosph. pressure */
+  /* check for surface tension or atmosph. pressure */
   else if ( (nsst->sol.cltyp & Tension) || (nsst->sol.cltyp & AtmPres) ) {
-    Pa = -1.0; /* for now */
     for (k=1; k<=nsst->info.np; k++) {
       nc  = 0;
       ppt = &nsst->mesh.point[k];
-      pcl = getCl(&nsst->sol,ppt->ref,NS_ver);
+
+      /* surface tension */
+      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Tension);
       if ( !pcl )  continue;
-      else if ( pcl->typ == Tension ) {
-         /* kappa = kappa_2d(mesh,k,n,&len); */
-         F[2*(k-1)+0] -= -0.5 * pcl->u[0] * len * kappa * n[0];
-         F[2*(k-1)+1] -= -0.5 * pcl->u[0] * len * kappa * n[1];
-      }
-      else if ( pcl->typ == AtmPres ) {
-         len = 0.1;
-         F[2*(k-1)+0] -= -0.5 * len * pcl->u[0] * n[0];
-         F[2*(k-1)+1] -= -0.5 * len * pcl->u[1] * n[1];
-      }
+      kappa = kappa_2d(&nsst->mesh,k,n,&len);
+      F[2*(k-1)+0] -= -0.5 * pcl->u[0] * len * kappa * n[0];
+      F[2*(k-1)+1] -= -0.5 * pcl->u[0] * len * kappa * n[1];
+      nc++;
+
+      /* atmospheric pressure */
+      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,AtmPres);
+      if ( !pcl )  continue;
+      kappa = kappa_2d(&nsst->mesh,k,n,&len);
+      /* ATTENTION AU SIGNE ICI */
+      F[2*(k-1)+0] -= -0.5 * len * pcl->u[0] * n[0];
+      F[2*(k-1)+1] -= -0.5 * len * pcl->u[1] * n[1];
+
       nc++;
     }
     if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d values (tension|atmPres)\n",nc);
@@ -601,14 +605,17 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
     nc = 0;
     for (k=1; k<=nsst->info.np; k++) {
       ppt = &nsst->mesh.point[k];
-      pcl = getCl(&nsst->sol,ppt->ref,NS_ver);
+      
+      /* Dirichlet conditions */
+      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
 			if ( !pcl )  continue;
-      else if ( pcl->typ == Dirichlet ) {
-        vp = pcl->att == 'f' ? &nsst->sol.u[2*(k-1)] : &pcl->u[0];
-        F[2*(k-1)+0] = NS_TGV * vp[0];
-        F[2*(k-1)+1] = NS_TGV * vp[1];
-      }
-      else if ( pcl->typ == Slip ) {
+      vp = pcl->att == 'f' ? &nsst->sol.u[2*(k-1)] : &pcl->u[0];
+      F[2*(k-1)+0] = NS_TGV * vp[0];
+      F[2*(k-1)+1] = NS_TGV * vp[1];
+      
+      /* slip conditions */
+      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Slip);
+      if ( pcl ) {
         fprintf(stdout," # NOT IMPLEMENTED\n");
         exit(1);
       }

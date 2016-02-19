@@ -18,7 +18,7 @@ if [ $# -eq 1 ]
 then
     if [ $1 = "-o" ]
     then
-		rm -rf ~/lib/libElas.*
+		rm -rf ~/lib/libNavierStokes.*
 		rm -rf ~/lib/libCommons.*
 	else
 		echo "Usage : sh install.sh [-o]"
@@ -44,12 +44,12 @@ fi
 #Installing Elasticity library and executable
 if [ \( ! -f ~/lib/libElas.so \)  -a \( ! -f ~/lib/libElas.dylib \) ]
 then
-    echo "-- Installing Elasticity"
+    echo "-- Installing NavierStokes"
     cmake ..
     make
     make install
 else
-	echo "-- Elasticity already installed. Skipping..."
+	echo "-- NavierStokes already installed. Skipping..."
 fi
 
 cd ../

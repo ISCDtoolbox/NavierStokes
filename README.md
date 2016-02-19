@@ -5,7 +5,7 @@ Nstokes is a finite element solver for Stokes and Navier-Stokes incompressible f
 
 ##### Automatic installation
 
-1. download the zip archive of LinearElasticity or clone this repository:
+1. download the zip archive of NavierStokes or clone this repository:
 
    ` git clone https://github.com/ICStoolbox/NavierStokes.git `
 
@@ -22,7 +22,7 @@ Nstokes is a finite element solver for Stokes and Navier-Stokes incompressible f
 1. you will need to install the [ICS Commons Library](https://github.com/ICStoolbox/Commons) on your system. 
 Please refer to the instructions provided on the ICS Commons Library page in order to install this library.
 
-2. download the zip archive of LinearElasticity or clone this repository:
+2. download the zip archive of NavierStokes or clone this repository:
 
    ` git clone https://github.com/ICStoolbox/NavierStokes.git `
 
@@ -43,9 +43,9 @@ Please refer to the instructions provided on the ICS Commons Library page in ord
    ` make install ` 
 
 #### Usage
-After compiling nstokes as described above, you should have an executable file in your $HOME/bin directory. If your PATH variable is correctly set to this directory, elastic can be called with the following syntax:
+After compiling nstokes as described above, you should have an executable file in your $HOME/bin directory. If your PATH variable is correctly set to this directory, nstokes can be called with the following syntax:
 
-    usage: nstokes [+/-v | -h | -N] [-dt step] [-mt val] [-nt n] [-n nit] [-r res] [-t typ] [-ts n] source[.mesh] [-p param[.elas]] [-s data[.sol]] [-o output[.sol]]
+    usage: nstokes [+/-v | -h | -N] [-dt step] [-mt val] [-nt n] [-n nit] [-r res] [-t typ] [-ts n] source[.mesh] [-p param[.nstokes]] [-s data[.sol]] [-o output[.sol]]
     
 The square braces indicate optional arguments. Some commands have flags, some others do not.
 
@@ -65,9 +65,9 @@ The options and flags are:
   +v           increase the verbosity level for output.
 
   source.mesh    name of the mesh file
-  param.elas     name of file containing elasticity parameters
+  param.nstokes  name of file containing fluid parameters
   data.sol       name of file containing the initial solution or boundary conditions
-  output.sol     name of the output file (displacement field)
+  output.sol     name of the output file (velocity+pressure)
 ```
 
 A full description of all parameters and options that can be specified in the command line or in a parameter file [file.nstokes] can be found in the project [wiki](https://github.com/ICStoolbox/NavierStokes/wiki).

@@ -110,12 +110,14 @@ int  hashel_2d(NSst *nsst);
 int  hashel_3d(NSst *nsst);
 int  addnod_2d(NSst *nsst);
 int  addnod_3d(NSst *nsst);
-pCl  getCl(pSol sol,int ref,int elt);
+pCl  getCl(pSol sol,int ref,int elt,char typ);
 int  getMat(pSol sol,int ref,double *nu,double *rho);
 int  advect_P1_2d(NSst *nsst);
 int  advect_P2_2d(NSst *nsst);
 int  nstokes1_2d(NSst *nsst);
 int  nstokes1_3d(NSst *nsst);
+
+double kappa_2d(pMesh mesh,int ip,double *n,double *len);
 
 
 #endif
