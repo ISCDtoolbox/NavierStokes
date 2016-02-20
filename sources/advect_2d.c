@@ -80,8 +80,10 @@ static int locelt_2d(pMesh mesh,int nsd,double *c,double *cb) {
     if ( aire1 < eps ) {
       nsp = nsf;
       nsf = pt->adj[0] / 3;
-      if ( !nsf )
+      if ( !nsf ) {
         cb[0] = 0.0;
+        nsf = nsp;
+      }
       else
         continue;
     }
@@ -91,8 +93,10 @@ static int locelt_2d(pMesh mesh,int nsd,double *c,double *cb) {
     if ( aire2 < eps ) {
       nsp = nsf;
       nsf = pt->adj[1] / 3;
-      if ( !nsf )
+      if ( !nsf ) {
         cb[1] = 0.0;
+        nsf = nsp;
+      }
       else
         continue;
     }
@@ -100,8 +104,10 @@ static int locelt_2d(pMesh mesh,int nsd,double *c,double *cb) {
     if ( aire3 < eps ) {
       nsp = nsf;
       nsf = pt->adj[2] / 3;
-      if ( !nsf )
+      if ( !nsf ) {
         cb[2] = 0.0;
+        nsf = nsp;
+      }
       else
         continue;
     }
