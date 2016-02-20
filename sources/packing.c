@@ -213,6 +213,8 @@ int unpack(NSst *nsst) {
   }
 
   dim = nsst->info.dim;
+  for (k=nsst->info.np+1; k<=nsst->info.npi; k++)
+    memset(&nsst->sol.u[dim*(k-1)+0],0,dim*sizeof(double));
   for (k=1; k<=nsst->info.np; k++) {
     ppt = &nsst->mesh.point[k];
     if ( ppt->new != k ) {
