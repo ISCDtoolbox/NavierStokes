@@ -573,10 +573,11 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
     }
     if ( nsst->info.verb == '+' )  fprintf(stdout,"     %d gravity values assigned\n",nc);
   }
+
   /* check for surface tension or atmosph. pressure */
-  else if ( (nsst->sol.cltyp & Tension) || (nsst->sol.cltyp & AtmPres) ) {
+  if ( (nsst->sol.cltyp & Tension) || (nsst->sol.cltyp & AtmPres) ) {
+    nc  = 0;
     for (k=1; k<=nsst->info.np; k++) {
-      nc  = 0;
       ppt = &nsst->mesh.point[k];
 
       /* surface tension */
@@ -594,7 +595,6 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
       /* ATTENTION AU SIGNE ICI */
       F[2*(k-1)+0] -= -0.5 * len * pcl->u[0] * n[0];
       F[2*(k-1)+1] -= -0.5 * len * pcl->u[1] * n[1];
-
       nc++;
     }
     if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d values (tension|atmPres)\n",nc);
@@ -638,10 +638,9 @@ static int rhsF_P2_2d(NSst *nsst,double *F) {
 static int rhsFu_2d(NSst *nsst,double *Fk) {
   pTria    pt;
   double  *a,*b,*c,area,d1,d2,idt,rho,nu;
-  int      i,k,dof,ig,off;
-  
-  dof = nsst->info.typ == P1 ? 4 : 6;
-  off = nsst->info.typ == P1 ? 0 : 3;
+  int      i,k,dof;
+
+  dof = nsst->info.typ == P1 ? 3 : 6;
   for (k=1; k<=nsst->info.nt; k++) {
     pt = &nsst->mesh.tria[k];
     getMat(&nsst->sol,pt->ref,&nu,&rho);
@@ -652,19 +651,17 @@ static int rhsFu_2d(NSst *nsst,double *Fk) {
     area = area_2d(a,b,c);
     d1 = rho * area / (3.0 * nsst->sol.dt);
     d2 = rho * area * 9.0 / (20.0 * nsst->sol.dt);
-    for (i=0; i<3; i++) {
-      ig = 2*(pt->v[i+off]-1);
-      Fk[ig+0] += d1*nsst->sol.u[ig+0];
-      Fk[ig+1] += d1*nsst->sol.u[ig+1];
+    for (i=0; i<dof; i++) {
+      Fk[2*(pt->v[i]-1)+0] += d1*nsst->sol.u[2*(pt->v[i]-1)+0];
+      Fk[2*(pt->v[i]-1)+1] += d1*nsst->sol.u[2*(pt->v[i]-1)+1];
     }
     if ( nsst->info.typ == P1 ) {
       /* bubble part */
-      ig = 2*(pt->v[3]-1);
-      Fk[ig+0] += d2*nsst->sol.u[ig+0];
-      Fk[ig+1] += d2*nsst->sol.u[ig+1];
+      Fk[2*(pt->v[3]-1)+0] += d2*nsst->sol.u[2*(pt->v[3]-1)+0];
+      Fk[2*(pt->v[3]-1)+1] += d2*nsst->sol.u[2*(pt->v[3]-1)+1];
     }
   }
-  
+
   return(1);
 }
 

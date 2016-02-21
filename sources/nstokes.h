@@ -24,6 +24,7 @@
 #define NS_CL     50
 #define NS_RES    1.e-6
 #define NS_EPS    1.e-6
+#define NS_EPS2   1.e-12
 #define NS_MAXIT  10000
 #define NS_TGV    1.e+30
 #define NS_EPSD   1.e-200
@@ -117,6 +118,8 @@ pCl  getCl(pSol sol,int ref,int elt,char typ);
 int  getMat(pSol sol,int ref,double *nu,double *rho);
 int  advect_P1_2d(NSst *nsst);
 int  advect_P2_2d(NSst *nsst);
+int  advect_P1_3d(NSst *nsst);
+int  advect_P2_3d(NSst *nsst);
 int  nstokes1_2d(NSst *nsst);
 int  nstokes1_3d(NSst *nsst);
 

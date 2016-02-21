@@ -281,9 +281,8 @@ int advect_P1_2d(NSst *nsst) {
     for (i=0; i<3; i++)  if ( pt->v[i] == k )  break;
 
     /* barycentric coordinates of point p in triangle iel */
+    memset(cb,0,3*sizeof(double));
     cb[i]         = 1.0;
-    cb[(i+1) % 3] = 0.0;
-    cb[(i+2) % 3] = 0.0;
 
     /* next point = foot of the characteristic line */
     c[0] = ppt->c[0];
