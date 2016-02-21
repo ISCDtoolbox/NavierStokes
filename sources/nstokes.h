@@ -30,6 +30,9 @@
 
 #define NS_MAX(a,b) (((a) < (b)) ? (b) : (a))
 #define NS_MIN(a,b) (((a) < (b)) ? (a) : (b))
+#define NS_MIN3(a,b,c) ( (a) < (b) ? ((a)<(c) ? (a) : (c)) : ((b)<(c) ? (b) : (c)) )
+#define NS_MAX3(a,b,c) ( (a) > (b) ? ((a)>(c) ? (a) : (c)) : ((b)>(c) ? (b) : (c)) )
+
 
 /* data structures */
 typedef struct {
