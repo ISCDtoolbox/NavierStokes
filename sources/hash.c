@@ -12,32 +12,6 @@ typedef struct {
 } Htab;
 
 
-int addnod_3d(NSst *nsst) {
-  pTetra   pt;
-  int      k,na;
-
-  if ( nsst->info.verb == '+' )  fprintf(stdout,"    Adding nodes: ");
-
-  /* store P1b nodes */
-  if ( nsst->info.typ == P1 ) {
-    na = nsst->info.ne;
-    for (k=1; k<=nsst->info.ne; k++) {
-      pt = &nsst->mesh.tetra[k];
-      pt->v[4] = nsst->info.np + k;
-    }
-  }
-  /* create P2 nodes */
-  else {
-    
-  }
-
-  if ( nsst->info.verb == '+' )  fprintf(stdout," %d\n",na);
-
-  
-  return(1);
-}
-
-
 /* check for node na along edge a,b (create if needed) */
 static int hpush_2d(Htab *ht,int a,int b,int *na) {
   Cell     *pc;
@@ -293,6 +267,52 @@ int hashel_2d(NSst *nsst) {
   if ( nsst->info.verb == '+' )  fprintf(stdout," %d updated\n",na);
 
   return(1);  
+}
+
+
+int addnod_3d(NSst *nsst) {
+  Htab     ht;
+  pTetra   pt;
+  int      i,k,na;
+  static int edg[6][2] = {0,1, 0,2, 0,3, 1,2, 1,3, 2,3};
+
+  if ( nsst->info.verb == '+' )  fprintf(stdout,"    Adding nodes: ");
+
+  /* store P1b nodes */
+  if ( nsst->info.typ == P1 ) {
+    na = nsst->info.ne;
+    for (k=1; k<=nsst->info.ne; k++) {
+      pt = &nsst->mesh.tetra[k];
+      pt->v[4] = nsst->info.np + k;
+    }
+  }
+  /* create P2 nodes */
+  else {
+    /* alloc hash */
+    ht.nmax = (int)(8.2 * nsst->info.np);
+    ht.cell = (Cell*)calloc(ht.nmax+2,sizeof(Cell));
+    assert(ht.cell);
+
+    ht.hsiz = 2 * nsst->info.np;
+    ht.hnxt = ht.hsiz;
+    for (k=ht.hsiz; k<ht.nmax; k++)
+      ht.cell[k].nxt = k+1;
+
+    for (k=1; k<=nsst->info.nei; k++) {
+      pt = &nsst->mesh.tetra[k];
+      for (i=0; i<6; i++) {
+        na = hpush_2d(&ht,pt->v[edg[i][0]],pt->v[edg[i][1]],&nsst->info.na);
+        pt->v[i+3] = nsst->info.np + na;
+      }
+    }
+    na = nsst->info.na;
+
+    free(ht.cell);
+  }
+
+  if ( nsst->info.verb == '+' )  fprintf(stdout," %d\n",na);
+
+  return(1);
 }
 
 
