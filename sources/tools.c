@@ -1,6 +1,39 @@
 #include "nstokes.h"
 
 
+/* find boundary conds in list for given ref and type */
+pCl getCl(pSol sol,int ref,int elt,char typ) {
+  pCl     pcl;
+  int     i;
+
+  for (i=0; i<sol->nbcl; i++) {
+    pcl = &sol->cl[i];
+    if ( (pcl->ref == ref) && (pcl->elt == elt) && (pcl->typ == typ) )  return(pcl);
+  }
+  return(0);
+}
+
+/* retrieve physical properties in list */
+int getMat(pSol sol,int ref,double *nu,double *rho) {
+  pMat   pm;
+  int    i;
+
+  *nu   = NS_NU;
+  *rho  = NS_RHO;
+  if ( sol->nmat == 0 )  return(1);
+  for (i=0; i<sol->nmat; i++) {
+    pm = &sol->mat[i];
+    if ( pm->ref == ref ) {
+      *nu   = pm->nu;
+      *rho  = pm->rho;
+      return(1);
+    }
+  }
+
+  return(0);
+}
+
+
 /* curvature approximation at point ip */
 double kappa_2d(pMesh mesh,int ip,double *n,double *len) {
   pPoint   p0,p1,p2;
@@ -36,7 +69,6 @@ double kappa_2d(pMesh mesh,int ip,double *n,double *len) {
   }
   /* reverse loop if open ball */
   if ( adj != k ) {
-puts("ICI");
     pt  = &mesh->tria[k];
     i2  = j2;
     adj = pt->adj[i2] / 3;

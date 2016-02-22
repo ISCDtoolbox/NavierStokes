@@ -2,39 +2,6 @@
 #include "sparse.h"
 
 
-/* find boundary conds in list for given ref and type */
-pCl getCl(pSol sol,int ref,int elt,char typ) {
-  pCl     pcl;
-  int     i;
-
-  for (i=0; i<sol->nbcl; i++) {
-    pcl = &sol->cl[i];
-    if ( (pcl->ref == ref) && (pcl->elt == elt) && (pcl->typ == typ) )  return(pcl);
-  }
-  return(0);
-}
-
-/* retrieve physical properties in list */
-int getMat(pSol sol,int ref,double *nu,double *rho) {
-  pMat   pm;
-  int    i;
-
-  *nu   = NS_NU;
-  *rho  = NS_RHO;
-  if ( sol->nmat == 0 )  return(1);
-  for (i=0; i<sol->nmat; i++) {
-    pm = &sol->mat[i];
-    if ( pm->ref == ref ) {
-      *nu   = pm->nu;
-      *rho  = pm->rho;
-      return(1);
-    }
-  }
-
-  return(0);
-}
-
-
 /* triangle area */
 static inline double area_2d(double *a,double *b,double *c) {
   return(0.5 * ((b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])));
@@ -60,6 +27,16 @@ static int setTGV_2d(NSst *nsst,pCsr A) {
         csrSet(A,2*(k-1)+1,2*(k-1)+1,NS_TGV);
       }
 	  }
+    if ( nsst->info.typ == P2 && nsst->info.np2 ) {
+      for (k=nsst->info.np+1; k<=nsst->info.np2; k++) {
+        ppt = &nsst->mesh.point[k];
+        pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
+        if ( pcl ) {
+          csrSet(A,2*(k-1)+0,2*(k-1)+0,NS_TGV);
+          csrSet(A,2*(k-1)+1,2*(k-1)+1,NS_TGV);
+        }
+      }
+    }
   }
   /* at edge nodes */
   if ( nsst->sol.clelt & NS_edg ) {

@@ -82,8 +82,19 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
         csrSet(A,3*(k-1)+2,3*(k-1)+2,NS_TGV);
       }
 	  }
+    if ( nsst->info.typ == P2 && nsst->info.np2 ) {
+      for (k=nsst->info.np+1; k<=nsst->info.np2; k++) {
+        ppt = &nsst->mesh.point[k];
+        pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
+        if ( pcl ) {
+          csrSet(A,3*(k-1)+0,3*(k-1)+0,NS_TGV);
+          csrSet(A,3*(k-1)+1,3*(k-1)+1,NS_TGV);
+          csrSet(A,3*(k-1)+2,3*(k-1)+2,NS_TGV);
+        }
+      }
+    }
   }
-  /* at edge nodes */
+  /* at edge nodes (not meaningful) */
   if ( nsst->sol.clelt & NS_edg ) {
     dof = nsst->info.typ == P1 ? 2 : 3;
     for (k=1; k<=nsst->info.na; k++) {
@@ -100,11 +111,12 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
   }
   /* at triangle nodes */
   if ( nsst->sol.clelt & NS_tri ) {
+    dof = nsst->info.typ == P1 ? 3 : 6;
     for (k=1; k<=nsst->info.nt; k++) {
       pt  = &nsst->mesh.tria[k];
       pcl = getCl(&nsst->sol,pt->ref,NS_tri,Dirichlet);
       if ( pcl ) {
-        for (i=0; i<3; i++) {
+        for (i=0; i<dof; i++) {
           csrSet(A,3*(pt->v[i]-1)+0,3*(pt->v[i]-1)+0,NS_TGV);
           csrSet(A,3*(pt->v[i]-1)+1,3*(pt->v[i]-1)+1,NS_TGV);
           csrSet(A,3*(pt->v[i]-1)+2,3*(pt->v[i]-1)+2,NS_TGV);
@@ -244,11 +256,137 @@ static int matBe_P1(double *a,double *b,double *c,double *d,double Be[12][10]) {
 
 
 static int matAe_P2(double *a,double *b,double *c,double *d,double dt,double nu, double rho, double Ae[30][30]) {
+	double   m[9],im[9],mm[9][30],Dp[3][10],ph[9][30];
+  double   vol;
+  char     i,j,p,s;
+  static double w[5]    = { -4./5., 9./20., 9./20., 9./20.,  9./20. };
+  static double q[5][3] = { {1./4.,1./4.,1./4.}, {1./2.,1./6.,1./6.}, {1./6.,1./2.,1./6.}, 
+                            {1./6.,1./6.,1./2.}, {1./6.,1./6.,1./6.} };
+
+  /* mm = tB^-1 */
+  for (i=0; i<3; i++) {
+    m[i+0] = a[i] - d[i];
+    m[i+3] = b[i] - d[i];
+    m[i+6] = c[i] - d[i];
+  }
+	if ( !invmatg(m,im) )  return(0);
+
+  /* measure of K(a,b,c,d) */
+  vol = volu_3d(a,b,c,d);
+
+  /* Ae: boucle sur les 5 points de quadrature */
+  memset(Ae,0,30*30*sizeof(double));
+  for (p=0; p<5; p++) {
+    /* Dp for P2*/
+    Dp[0][0]=4*q[p][0]-1; Dp[0][1]=0;            Dp[0][2]=0;           Dp[0][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
+    Dp[1][0]=0;           Dp[1][1]=4*q[p][1]-1;  Dp[1][2]=0;           Dp[1][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
+    Dp[2][0]=0;           Dp[2][1]=0;            Dp[2][2]=4*q[p][2]-1; Dp[2][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
+    
+    Dp[0][4]=4*q[p][1];   Dp[0][5]=4*q[p][2];    Dp[0][6]=4*(1-2*q[p][0]-q[p][1]-q[p][2]); 
+    Dp[1][4]=4*q[p][0];   Dp[1][5]=0;            Dp[1][6]=-4*q[p][0]; 
+    Dp[2][4]=0;           Dp[2][5]=4*q[p][0];    Dp[2][6]=-4*q[p][0];   
+  
+    Dp[0][7]=0;           Dp[0][8]=-4*q[p][1];                         Dp[0][9]=-4*q[p][2];
+    Dp[1][7]=4*q[p][2];   Dp[1][8]=4*(1-q[p][0]-2*q[p][1]-q[p][2]);    Dp[1][9]=-4*q[p][2];
+    Dp[2][7]=4*q[p][1];   Dp[2][8]=-4*q[p][1];                         Dp[2][9]=4*(1-q[p][0]-q[p][1]-2*q[p][2]);
+		
+		/* unsteady case */
+    if ( dt > 0.0 ) {
+      /* ph_basis function */
+      memset(ph,0,9*30*sizeof(double));
+      ph[0][0] = ph[3][10] = ph[6][20] = q[p][0]*(2*q[p][0]-1);  
+      ph[0][1] = ph[3][11] = ph[6][21] = q[p][1]*(2*q[p][1]-1);  
+      ph[0][2] = ph[3][12] = ph[6][22] = q[p][2]*(2*q[p][2]-1);  
+      ph[0][3] = ph[3][13] = ph[6][23] = (1.0 - q[p][0]-q[p][1]-q[p][2])*(1.0 - 2*q[p][0]-2*q[p][1]-2*q[p][2]);   
+      ph[0][4] = ph[3][14] = ph[6][24] = 4 * q[p][0]*q[p][1];
+      ph[0][5] = ph[3][15] = ph[6][25] = 4 * q[p][0]*q[p][2];
+      ph[0][6] = ph[3][16] = ph[6][26] = 4 * q[p][0]*(1.0 - q[p][0]-q[p][1]-q[p][2]);
+      ph[0][7] = ph[3][17] = ph[6][27] = 4 * q[p][1]*q[p][2]; 
+      ph[0][8] = ph[3][18] = ph[6][28] = 4 * q[p][1]*(1.0 - q[p][0]-q[p][1]-q[p][2]);
+      ph[0][9] = ph[3][19] = ph[6][29] = 4 * q[p][2]*(1.0 - q[p][0]-q[p][1]-q[p][2]); 
+    }  
+    /* mm = (tBt^-1) Dp */
+    memset(mm,0,9*30*sizeof(double));
+    for (i=0; i<3; i++) {
+      for (j=0; j<10; j++) {
+        for (s=0; s<3; s++) 
+          mm[i][j]   += im[i*3+s] * Dp[s][j];
+        mm[i+3][j+10] = mm[i][j];
+        mm[i+6][j+20] = mm[i][j];
+      }
+    } 
+    /* Ae = vol tmm nn */
+    for (i=0; i<30; i++) {
+      for (j=i; j<30; j++) {
+        for (s=0; s<9; s++)
+          Ae[i][j] += w[p]*vol * nu * mm[s][i] * mm[s][j];
+          if ( dt > 0.0 ) 
+						Ae[i][j] += (w[p]*vol * rho * ph[s][i] * ph[s][j]) / dt;
+      }
+    }
+  }
+
   return(1);
 }
 
 
 static int matBe_P2(double *a,double *b,double *c,double *d,double Be[12][10]) {
+	double   m[9],im[9],mm[3][10],ph[3][12],Dp[3][10];
+  double   vol;
+  char     i,j,p,s;
+  static double w[5]    = { -4./5., 9./20., 9./20., 9./20.,  9./20. };
+  static double q[5][3] = { {1./4.,1./4.,1./4.}, {1./2.,1./6.,1./6.}, {1./6.,1./2.,1./6.}, 
+                            {1./6.,1./6.,1./2.}, {1./6.,1./6.,1./6.} };
+
+  /* mm = tB^-1 */
+  for (i=0; i<3; i++) {
+    m[i+0] = a[i] - d[i];
+    m[i+3] = b[i] - d[i];
+    m[i+6] = c[i] - d[i];
+  }
+	if ( !invmatg(m,im) )  return(0);
+
+  /* measure of K(a,b,c,d) */
+  vol = volu_3d(a,b,c,d);
+
+  memset(Be,0,12*10*sizeof(double));
+  for (p=0; p<5; p++) {
+	  /* Dp for bubble */
+    Dp[0][0]=4*q[p][0]-1; Dp[0][1]=0;            Dp[0][2]=0;           Dp[0][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
+    Dp[1][0]=0;           Dp[1][1]=4*q[p][1]-1;  Dp[1][2]=0;           Dp[1][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
+    Dp[2][0]=0;           Dp[2][1]=0;            Dp[2][2]=4*q[p][2]-1; Dp[2][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
+    
+    Dp[0][4]=4*q[p][1];   Dp[0][5]=4*q[p][2];    Dp[0][6]=4*(1-2*q[p][0]-q[p][1]-q[p][2]); 
+    Dp[1][4]=4*q[p][0];   Dp[1][5]=0;            Dp[1][6]=-4*q[p][0]; 
+    Dp[2][4]=0;           Dp[2][5]=4*q[p][0];    Dp[2][6]=-4*q[p][0];   
+  
+    Dp[0][7]=0;           Dp[0][8]=-4*q[p][1];                         Dp[0][9]=-4*q[p][2];
+    Dp[1][7]=4*q[p][2];   Dp[1][8]=4*(1-q[p][0]-2*q[p][1]-q[p][2]);    Dp[1][9]=-4*q[p][2];
+    Dp[2][7]=4*q[p][1];   Dp[2][8]=-4*q[p][1];                         Dp[2][9]=4*(1-q[p][0]-q[p][1]-2*q[p][2]);
+		
+    /* ph_basis function */
+    memset(ph,0,3*12*sizeof(double));
+    ph[0][0] = ph[1][4] = ph[2][8] = -q[p][0];  
+    ph[0][1] = ph[1][5] = ph[2][9] = -q[p][1];  
+    ph[0][2] = ph[1][6] = ph[2][10] = -q[p][2];  
+    ph[0][3] = ph[1][7] = ph[2][11] = q[p][0]+q[p][1]+q[p][2]-1.0;
+    /* mm = (tBt^-1) Dp */
+    memset(mm,0,3*10*sizeof(double));
+    for (i=0; i<3; i++) {
+      for (j=0; j<10; j++) {
+        for (s=0; s<3; s++) 
+          mm[i][j]   += im[i*3+s] * Dp[s][j];
+      }
+    }
+	  /* Be = area*wp*tmm N mm */
+	  for (i=0; i<12; i++) {
+	    for (j=0; j<10; j++) {
+	      for (s=0; s<3; s++)
+	        Be[i][j] += w[p]*vol * ph[s][i] * mm[s][j];
+	    }
+	  }
+  }
+
   return(1);
 }
 
