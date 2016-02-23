@@ -53,12 +53,9 @@ int loadMesh(NSst *nsst) {
   dof = nsst->info.typ == P2 ? 10 : 1;  /* bound on number of nodes */
   nsst->mesh.point = (pPoint)calloc(dof*nsst->info.np+1,sizeof(Point));
   assert(nsst->mesh.point);
-  if ( nsst->info.ne > 0 ) {
-  }
-
-  /* 2d mesh */
   GmfGotoKwd(inm,GmfVertices);
   if ( nsst->info.dim == 2 ) {
+    /* 2d mesh */
     for (k=1; k<=nsst->info.np; k++) {
       ppt = &nsst->mesh.point[k];
       if ( nsst->info.ver == GmfFloat ) {
@@ -70,8 +67,8 @@ int loadMesh(NSst *nsst) {
         GmfGetLin(inm,GmfVertices,&ppt->c[0],&ppt->c[1],&ppt->ref);
     }
   }
-  /* 3d mesh */
   else {
+    /* 3d mesh */
     for (k=1; k<=nsst->info.np; k++) {
       ppt = &nsst->mesh.point[k];
       if ( nsst->info.ver == GmfFloat ) {
