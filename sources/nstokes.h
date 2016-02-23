@@ -89,7 +89,7 @@ typedef struct {
 typedef Mat * pMat;
 
 typedef struct {
-	int      nit,nt,nbcl,nmat;
+	int      nit,nt,ts,nbcl,nmat;
   double  *u,*p,*F,*un,dt,mt,res,gr[3],tim;
   char    *namein,*nameout,*namepar,cltyp,clelt,sim;
   Cl      *cl;
@@ -106,7 +106,7 @@ struct _NSst{
 /* prototypes */
 int  loadMesh(NSst *nsst);
 int  loadSol(NSst *nsst);
-int  saveSol(NSst *nsst);
+int  saveSol(NSst *nsst,int it);
 int  pack_2d(NSst *nsst);
 int  pack_3d(NSst *nsst);
 int  unpack(NSst *nsst);

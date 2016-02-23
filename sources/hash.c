@@ -353,7 +353,7 @@ int addnod_2d(NSst *nsst) {
     }
     na = nsst->info.na;
 
-    free(ht.cell);    
+    free(ht.cell);
   }
 
   if ( nsst->info.verb == '+' )  fprintf(stdout," %d\n",na);

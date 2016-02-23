@@ -57,6 +57,7 @@ static void usage(char *prog) {
   -n nit       number of iterations max for convergence\n\
   -r res       value of the residual (Krylov space) for convergence\n\
   -t typ       specify the type of FE space: 1: P1bP1(*), 2: P2P1\n\
+  -ts n        save solution every n time steps\n\
   -v           suppress any message (for use with function call).\n\
   +v           increase the verbosity level for output.\n\n\
   source.mesh    name of the mesh file\n\
@@ -184,9 +185,17 @@ static int parsar(int argc,char *argv[],NSst *nsst) {
         }
         break;
       case 't':
-        if ( ++i < argc && isdigit(argv[i][0]) )
+        if ( !strcmp(argv[i],"-ts") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            nsst->sol.ts = atoi(argv[i]);
+          else {
+            fprintf(stderr,"%s: missing argument option\n",argv[0]);
+            usage(argv[0]);
+          }
+        }
+        else if ( ++i < argc && isdigit(argv[i][0]) )
           nsst->info.typ = atoi(argv[i]);
-        else { 
+        else {
           fprintf(stderr,"%s: missing argument option\n",argv[0]);
           usage(argv[0]);
         }
@@ -418,6 +427,7 @@ int main(int argc,char **argv) {
   nsst.sol.dt    = -1.0;     /* time stepping */
   nsst.sol.mt    = -1.0;     /* max time      */
   nsst.sol.nt    = 0;        /* steady-state  */
+  nsst.sol.ts    = 0;        /* no saving */
   nsst.sol.res   = NS_RES;
   nsst.sol.nit   = NS_MAXIT;
 
@@ -485,6 +495,12 @@ int main(int argc,char **argv) {
 	printim(nsst.info.ctim[1].gdif,stim);
   if ( nsst.info.verb != '0' )  fprintf(stdout," - COMPLETED: %s\n",stim);
 
+  if ( !nsst.sol.nameout ) {
+    nsst.sol.nameout = (char *)calloc(128,sizeof(char));
+    assert(nsst.sol.nameout);
+    strcpy(nsst.sol.nameout,nsst.mesh.name);
+  }
+
   /* solve */
   chrono(ON,&nsst.info.ctim[2]);
   if ( nsst.info.verb != '0' )
@@ -504,13 +520,7 @@ int main(int argc,char **argv) {
   chrono(ON,&nsst.info.ctim[3]);
   if ( nsst.info.zip && !unpack(&nsst) )  return(1);
 
-  if ( !nsst.sol.nameout ) {
-    nsst.sol.nameout = (char *)calloc(128,sizeof(char));
-    assert(nsst.sol.nameout);
-    strcpy(nsst.sol.nameout,nsst.mesh.name);
-  }
-
-  ier = saveSol(&nsst);
+  ier = saveSol(&nsst,0);
 	if ( !ier )   return(1);
   chrono(OFF,&nsst.info.ctim[3]);
   if ( nsst.info.verb != '0' ) {

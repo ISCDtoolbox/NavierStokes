@@ -414,6 +414,25 @@ static int matPFe_P2(double *a,double *b,double PFe[4][4]) {
 
 /* set slip condition */
 static int slipon_3d(NSst *nsst,pCsr A) {
+  pTria    pt;
+  pCl      pcl;
+  double  *a,*b,*c,PNe[4][4],PFe[4][4];
+  int      j,k,l,dof,iga,igb,igc,ier;
+
+  dof = nsst->info.typ == P1 ? 3 : 6;
+
+  for (k=1; k<=nsst->info.nt; k++) {
+    pt  = &nsst->mesh.tria[k];
+    pcl = getCl(&nsst->sol,pt->ref,NS_tri,Slip);
+    if ( !pcl )  continue;
+    iga = 3*(pt->v[0]-1);
+    igb = 3*(pt->v[1]-1);
+    igc = 3*(pt->v[2]-1);
+    a = &nsst->mesh.point[pt->v[0]].c[0];
+    b = &nsst->mesh.point[pt->v[1]].c[0];
+    c = &nsst->mesh.point[pt->v[2]].c[0];
+  }
+
   return(1);
 }
 
@@ -501,7 +520,7 @@ static int matAB_3d(NSst *nsst,pCsr A,pCsr B) {
   }
 
   /* slip boundary condition */
-  if ( (nsst->sol.cltyp & Slip) && (nsst->info.na > 0) ) {
+  if ( (nsst->sol.cltyp & Slip) && (nsst->info.nt > 0) ) {
     ier = slipon_3d(nsst,A);
   }
   setTGV_3d(nsst,A);
@@ -632,8 +651,8 @@ static int rhsFu_3d(NSst *nsst,double *Fk) {
 int nstokes1_3d(NSst *nsst) {
   Csr      A,B;
   double  *F,*Fk,res;
-  int      ier,it,nit,sz;
-  char     stim[32];
+  int      ier,it,jt,nit,sz;
+  char     verb,stim[32];
   
   /* -- Part I: matrix assembly */
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    Matrix and right-hand side assembly\n");
@@ -684,7 +703,7 @@ int nstokes1_3d(NSst *nsst) {
 	  assert(nsst->sol.un);
     Fk = (double*)calloc(nsst->info.dim*sz,sizeof(double));
     assert(F);
-    it = 1;
+    it = jt = 1;
     do {
       nsst->sol.tim += nsst->sol.dt;
       /* copy solution at time u^n */
@@ -706,6 +725,18 @@ int nstokes1_3d(NSst *nsst) {
       nit = nsst->sol.nit;
       ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,nsst->info.verb);
       if ( ier < 1 )  break;
+      if ( nsst->info.verb != '0' ) {
+        fprintf(stdout,"     iteration %d: res=%E, nit=%5d\r",it,res,nit);
+        fflush(stdout);
+      }
+      /* save solution */
+      if ( it % nsst->sol.ts == 0 ) {
+        verb = nsst->info.verb;
+        nsst->info.verb = '0';
+        saveSol(nsst,jt);
+        nsst->info.verb = verb;
+        jt++;
+      }
     }
     while ( ++it <= nsst->sol.nt );
 

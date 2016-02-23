@@ -647,8 +647,8 @@ static int rhsFu_2d(NSst *nsst,double *Fk) {
 int nstokes1_2d(NSst *nsst) {
   Csr      A,B;
   double  *F,*Fk,res;
-  int      ier,it,nit,sz;
-  char     stim[32];
+  int      ier,it,jt,nit,sz;
+  char     verb,stim[32];
 
   /* -- Part I: matrix assembly */
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    Matrix and right-hand side assembly\n");
@@ -698,7 +698,7 @@ int nstokes1_2d(NSst *nsst) {
 	  assert(nsst->sol.un);
     Fk = (double*)calloc(nsst->info.dim*sz,sizeof(double));
     assert(F);
-    it = 1;
+    it = jt = 1;
     do {
       nsst->sol.tim += nsst->sol.dt;
       /* copy solution at time u^n */
@@ -718,10 +718,23 @@ int nstokes1_2d(NSst *nsst) {
       /* Uzawa solver */
       res = nsst->sol.res;
       nit = nsst->sol.nit;
-      ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,nsst->info.verb);
+      ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,'0');
       if ( ier < 1 )  break;
+      if ( nsst->info.verb != '0' ) {
+        fprintf(stdout,"     iteration %d: res=%E, nit=%5d\r",it,res,nit);
+        fflush(stdout);
+      }
+      /* save solution */
+      if ( it % nsst->sol.ts == 0 ) {
+        verb = nsst->info.verb;
+        nsst->info.verb = '0';
+        saveSol(nsst,jt);
+        nsst->info.verb = verb;
+        jt++;
+      }
     }
     while ( ++it <= nsst->sol.nt );
+    if ( nsst->info.verb != '0' )  fprintf(stdout,"\n");
 
     /* free mesh structure */
     if ( nsst->info.mfree ) {

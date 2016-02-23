@@ -188,15 +188,15 @@ int loadSol(NSst *nsst) {
       GmfGetLin(inm,GmfSolAtVertices,buf);
       for (i=0; i<nsst->info.dim; i++)
         nsst->sol.u[nsst->info.dim*k+i] = buf[i];
-      nsst->sol.p[k] = buf[i];     
+      nsst->sol.p[k] = buf[i];
     }
   }
   else {
     for (k=0; k<nsst->info.np; k++) {
       GmfGetLin(inm,GmfSolAtVertices,bufd);
-      for (i=0; i<nsst->info.dim; i++)      
-        nsst->sol.u[nsst->info.dim*k+i] = bufd[i];         
-      nsst->sol.p[k] = bufd[i];     
+      for (i=0; i<nsst->info.dim; i++)
+        nsst->sol.u[nsst->info.dim*k+i] = bufd[i];
+      nsst->sol.p[k] = bufd[i];
     }
   }
 
@@ -220,21 +220,36 @@ int loadSol(NSst *nsst) {
 
 
 /* save solution */
-int saveSol(NSst *nsst) {
+int saveSol(NSst *nsst,int it) {
   double       dbuf[GmfMaxTyp];
   float        fbuf[GmfMaxTyp],tmpf;
   int          i,k,outm,type,typtab[GmfMaxTyp];
-  char        *ptr,data[128];
+  char        *ptr,data[128],buf[64];
 
   strcpy(data,nsst->sol.nameout);
   ptr = strstr(data,".mesh");
   if ( ptr )  {
     *ptr = '\0';
+    if ( it > 0 ) {
+      sprintf(buf,".%d",it);
+      strcat(data,buf);
+    }
     strcat(data,nsst->info.ver == 1 ? ".solb" : ".sol");
   }
   else {
     ptr = strstr(data,".sol");
-    if ( !ptr )  strcat(data,".sol");
+    if ( ptr && it > 0 ) {
+      *ptr = '\0';
+      sprintf(buf,".%d",it);
+      strcat(data,buf);
+    }
+    else if ( !ptr ) {
+      if ( it > 0 ) {
+        sprintf(buf,".%d",it);
+        strcat(data,buf);
+      }
+      strcat(data,".sol");
+    }
   }
 
   if ( !(outm = GmfOpenMesh(data,GmfWrite,nsst->info.ver,nsst->info.dim)) ) {
