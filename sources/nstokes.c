@@ -402,7 +402,7 @@ static int parsop(NSst *nsst) {
 
 int main(int argc,char **argv) {
   NSst     nsst;
-  int      ier;
+  int      ier,nel;
   char     stim[32];
 
   memset(&nsst,0,sizeof(NSst));
@@ -453,6 +453,7 @@ int main(int argc,char **argv) {
   /* loading mesh */
 	ier = loadMesh(&nsst);
 	if ( ier <= 0 )  return(1);
+  nel = nsst.info.dim == 2 ? nsst.info.nt : nsst.info.ne;
 
   /* parse parameters in file */
   if ( !parsop(&nsst) )  return(1);
@@ -460,7 +461,7 @@ int main(int argc,char **argv) {
   /* allocating memory */
   if ( !nsst.sol.u ) {
     if ( nsst.info.typ == P1 )
-      nsst.sol.u = (double*)calloc(nsst.info.dim*(nsst.info.np+nsst.info.nt),sizeof(double));
+      nsst.sol.u = (double*)calloc(nsst.info.dim*(nsst.info.np+nel),sizeof(double));
 	  else {
 	    nsst.info.np2 = 3*nsst.info.np;   /* for now an upper bound */
 		  nsst.sol.u = (double*)calloc(nsst.info.dim * (nsst.info.np+nsst.info.np2),sizeof(double));

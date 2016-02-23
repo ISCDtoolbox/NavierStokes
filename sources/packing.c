@@ -28,7 +28,7 @@ int pack_3d(NSst *nsst) {
   nsst->info.zip = 1;
 
   /* compress and renum vertices */
-  nf = nsst->info.ne;
+  nf = nsst->info.np;
   k  = 0;
   while ( ++k <= nf ) {
     if ( nsst->mesh.point[k].new == 0 ) {
@@ -74,7 +74,7 @@ int pack_3d(NSst *nsst) {
     pt->v[1] = nsst->mesh.point[pt->v[1]].new;
     pt->v[2] = nsst->mesh.point[pt->v[2]].new;
   }
-  
+
   /* renum edges */
   for (k=1; k<=nsst->info.na; k++) {
     pa = &nsst->mesh.edge[k];
