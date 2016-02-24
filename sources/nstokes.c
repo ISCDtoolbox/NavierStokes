@@ -402,13 +402,13 @@ static int parsop(NSst *nsst) {
 
 /* parsing boundary conditions */
 static int parsdt(NSst *nsst) {
-  float    dt;
+  double   dt;
   FILE    *in;
 
   /* check for parameter file */
   in = fopen(".dt","r");
   if ( !in )  return(1);
-  fscanf(in,"%f",&dt);
+  fscanf(in,"%lf",&dt);
   fclose(in);
  
   /* check value */
