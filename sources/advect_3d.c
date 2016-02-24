@@ -316,7 +316,7 @@ static int nxtpt_3d(NSst *nsst,int *iel,double *c,double *cb,double step,double 
   c[0] = cc[0];
   c[1] = cc[1];
   c[2] = cc[2];
-  vecint_P1_3d(nsst->sol.un,nsst->mesh.tria[k].v,cb,v);
+  vecint_P1_3d(nsst->sol.un,nsst->mesh.tetra[k].v,cb,v);
   *iel = k;
 
   return(1);
@@ -350,7 +350,7 @@ int advect_P1_3d(NSst *nsst) {
     v[2] = nsst->sol.un[3*(k-1)+2];
     norm = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
     if ( norm < NS_EPSD )  continue;
-    
+
     pt = &nsst->mesh.tetra[ppt->s];
     for (i=0; i<4; i++)  if ( pt->v[i] == k )  break;
 
