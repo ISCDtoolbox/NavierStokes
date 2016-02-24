@@ -69,10 +69,13 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
   pPoint   ppt;
   pTria    pt;
   double   *a,*b,*c,val,vol,ivo,x[3],y[3];
-  int      k,i,dof;
+  int      k,i,dof,nc;
+
+  if ( nsst->info.verb == '+' )  fprintf(stdout,"     set diagonal coefficients\n");
 
   /* at vertices */
   if ( nsst->sol.clelt & NS_ver ) {
+    nc = 0;
     for (k=1; k<=nsst->info.np; k++) {
       ppt = &nsst->mesh.point[k];
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
@@ -80,6 +83,7 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
         csrSet(A,3*(k-1)+0,3*(k-1)+0,NS_TGV);
         csrSet(A,3*(k-1)+1,3*(k-1)+1,NS_TGV);
         csrSet(A,3*(k-1)+2,3*(k-1)+2,NS_TGV);
+        nc++;
       }
 	  }
     if ( nsst->info.typ == P2 && nsst->info.np2 ) {
@@ -90,9 +94,11 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
           csrSet(A,3*(k-1)+0,3*(k-1)+0,NS_TGV);
           csrSet(A,3*(k-1)+1,3*(k-1)+1,NS_TGV);
           csrSet(A,3*(k-1)+2,3*(k-1)+2,NS_TGV);
+          nc++;
         }
       }
     }
+    if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d nodal values\n",nc);
   }
   /* at edge nodes (not meaningful) */
   if ( nsst->sol.clelt & NS_edg ) {
@@ -112,6 +118,7 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
   /* at triangle nodes */
   if ( nsst->sol.clelt & NS_tri ) {
     dof = nsst->info.typ == P1 ? 3 : 6;
+    nc  = 0;
     for (k=1; k<=nsst->info.nt; k++) {
       pt  = &nsst->mesh.tria[k];
       pcl = getCl(&nsst->sol,pt->ref,NS_tri,Dirichlet);
@@ -121,8 +128,10 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
           csrSet(A,3*(pt->v[i]-1)+1,3*(pt->v[i]-1)+1,NS_TGV);
           csrSet(A,3*(pt->v[i]-1)+2,3*(pt->v[i]-1)+2,NS_TGV);
         }
+        nc++;
       }
     }
+    if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d element values\n",nc);
   }
 
   return(1);
@@ -539,6 +548,7 @@ static int matAB_3d(NSst *nsst,pCsr A,pCsr B) {
 /* build right hand side vector and set boundary conds. */
 static int rhsF_P1_3d(NSst *nsst,double *F) {
   pTetra   pt;
+  pTria    ptt;
   pEdge    pa;
   pPoint   ppt;
   pCl      pcl;
@@ -600,6 +610,24 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
       nc++;
     }
     if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d nodal values\n",nc);
+  }
+
+  if ( nsst->sol.clelt & NS_tri ) {
+    nc = 0;
+    for (k=1; k<=nsst->info.nt; k++) {
+      ptt = &nsst->mesh.tria[k];
+      /* Dirichlet conditions */
+      pcl = getCl(&nsst->sol,ptt->ref,NS_tri,Dirichlet);
+			if ( !pcl )  continue;
+      for (i=0; i<3; i++) {
+        vp = pcl->att == 'f' ? &nsst->sol.u[3*(ptt->v[i]-1)] : &pcl->u[0];
+        F[3*(ptt->v[i]-1)+0] = NS_TGV * vp[0];
+        F[3*(ptt->v[i]-1)+1] = NS_TGV * vp[1];
+        F[3*(ptt->v[i]-1)+2] = NS_TGV * vp[2];
+      }
+      nc++;
+    }
+    if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d element values\n",nc);
   }
 
   return(1);

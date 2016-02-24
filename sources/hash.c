@@ -271,6 +271,7 @@ int hashel_2d(NSst *nsst) {
 }
 
 
+/* add nodes P1b or P2 to tables */
 int addnod_3d(NSst *nsst) {
   Htab     ht;
   pTetra   pt;
