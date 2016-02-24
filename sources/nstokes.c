@@ -400,6 +400,25 @@ static int parsop(NSst *nsst) {
 }
 
 
+/* parsing boundary conditions */
+static int parsdt(NSst *nsst) {
+  float    dt;
+  FILE    *in;
+
+  /* check for parameter file */
+  in = fopen(".dt","r");
+  if ( !in )  return(1);
+  fscanf(in,"%f",&dt);
+  fclose(in);
+ 
+  /* check value */
+  if ( nsst->sol.dt > 0.0 )
+    nsst->sol.dt = NS_MIN(nsst->sol.dt,dt);
+
+  return(1);
+}
+
+
 int main(int argc,char **argv) {
   NSst     nsst;
   int      ier,nel;
@@ -457,6 +476,7 @@ int main(int argc,char **argv) {
 
   /* parse parameters in file */
   if ( !parsop(&nsst) )  return(1);
+  if ( !parsdt(&nsst) )  return(1);
 
   /* allocating memory */
   if ( !nsst.sol.u ) {
@@ -506,14 +526,14 @@ int main(int argc,char **argv) {
   chrono(ON,&nsst.info.ctim[2]);
   if ( nsst.info.verb != '0' )
     fprintf(stdout,"\n ** MODULE NSTOKES: %s (%s)\n",NS_VER,nsst.sol.sim == Navier ? "Navier-Stokes" : "Stokes");
-
 	ier = NS_nstokes(&nsst);
-	if ( !ier )  return(1);
-
   chrono(OFF,&nsst.info.ctim[2]);
   if ( nsst.info.verb != '0' ) {
 		printim(nsst.info.ctim[2].gdif,stim);
-    fprintf(stdout," ** COMPLETED: %s\n\n",stim);
+    if ( ier )  
+      fprintf(stdout," ** COMPLETED: %s\n\n",stim);
+    else
+      fprintf(stdout," ** NOT COMPLETED!: %s\n\n",stim);
 	}
 
   /* save file */

@@ -758,7 +758,7 @@ int nstokes1_3d(NSst *nsst) {
         fflush(stdout);
       }
       /* save solution */
-      if ( it % nsst->sol.ts == 0 ) {
+      if ( nsst->sol.ts > 0 && it % nsst->sol.ts == 0 ) {
         verb = nsst->info.verb;
         nsst->info.verb = '0';
         saveSol(nsst,jt);
