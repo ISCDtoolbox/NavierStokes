@@ -38,8 +38,7 @@
 /* data structures */
 typedef struct {
   double  c[3];         /* coordinates */
-  int     ref,s,new;    /* label and seed for simplex, new: packed value */
-  char    flag;         /* used in advect to mark vertex */
+  int     ref,s,new;    /* label and seed for simplex, new:perm */
 } Point;
 typedef Point * pPoint;
 

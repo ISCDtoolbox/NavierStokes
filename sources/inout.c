@@ -111,16 +111,6 @@ int loadMesh(NSst *nsst) {
       GmfGetLin(inm,GmfTetrahedra,&pt->v[0],&pt->v[1],&pt->v[2],&pt->v[3],&pt->ref);
     }
   }
-  /* read corners (used for curvature) */
-  nf = GmfStatKwd(inm,GmfCorners);
-  if ( nf > 0 ) {
-    GmfGotoKwd(inm,GmfCorners);
-    for (k=1; k<=nf; k++) {
-      GmfGetLin(inm,GmfCorners,&tmp);
-      ppt = &nsst->mesh.point[tmp];
-      ppt->flag |= Corner;
-    }
-  }
   GmfCloseMesh(inm);
 
   if ( nsst->info.verb != '0' ) {
