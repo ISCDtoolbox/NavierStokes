@@ -516,7 +516,7 @@ static int matAB_3d(NSst *nsst,pCsr A,pCsr B) {
           csrPut(A,jg,ig,Ae[i][j]);
       }
     }
-   
+
     /* local mass matrix B */
     for (i=0; i<12; i++) {    /*(12=mesh->dim*4) */
       ig = pt->v[i % 4]-1;

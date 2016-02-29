@@ -15,7 +15,7 @@ int pack_3d(NSst *nsst) {
     pe = &nsst->mesh.tetra[k];
     if ( getMat(&nsst->sol,pe->ref,&nu,&rho) ) {
       nf++;
-      for (i=0; i<4; i++)  nsst->mesh.point[pe->v[i]].new = 1;
+      for (i=0; i<4; i++)  nsst->mesh.point[pe->v[i]].new = pe->v[i];
     }
   }
   if ( nf == nsst->info.nei )  return(-1);
@@ -67,19 +67,15 @@ int pack_3d(NSst *nsst) {
   k  = 1;
   while ( k < nf ) {
     pe = &nsst->mesh.tetra[k];
-    for (i=0; i<4; i++)  
-      if ( pe->v[i] > nsst->info.np || pe->v[i] == 0 )  break;
-    if ( i < 4 ) {
+    if ( !getMat(&nsst->sol,pe->ref,&nu,&rho) ) {
       do {
         pe = &nsst->mesh.tetra[nf];
-        for (i=0; i<4; i++)
-          if ( pe->v[i] > nsst->info.np || pe->v[i] == 0 )  break;
-        if ( i == 4 )  break;
-        nf --;
+        if ( getMat(&nsst->sol,pe->ref,&nu,&rho) )  break;
+        nf--;
       }
       while ( k < nf );
       /* put nf into k */
-      memcpy(&nsst->mesh.tetra[k],&nsst->mesh.tetra[nf],sizeof(Tetra));
+      if ( k < nf )  memcpy(&nsst->mesh.tetra[k],&nsst->mesh.tetra[nf],sizeof(Tetra));
       nf--;
     }
     k++;
@@ -208,7 +204,7 @@ int pack_2d(NSst *nsst) {
   }
   nsst->info.np = nf;
 
-  /* compress and renum triangles */
+  /* compress and renum triangles (!need to check with getMat) */
   for (k=1; k<=nsst->info.nti; k++) {
     pt = &nsst->mesh.tria[k];
     for (i=0; i<3; i++)  pt->v[i] = nsst->mesh.point[pt->v[i]].new;
@@ -217,19 +213,15 @@ int pack_2d(NSst *nsst) {
   k  = 1;
   while ( k < nf ) {
     pt = &nsst->mesh.tria[k];
-    for (i=0; i<3; i++)
-      if ( pt->v[i] > nsst->info.np || pt->v[i] == 0 )  break;
-    if ( i < 3 ) {
+    if ( !getMat(&nsst->sol,pt->ref,&nu,&rho) ) {
       do {
         pt = &nsst->mesh.tria[nf];
-        for (i=0; i<3; i++)
-          if ( pt->v[i] > nsst->info.np || pt->v[i] == 0 )  break;
-        if ( i < 3 )  break;
+        if ( getMat(&nsst->sol,pt->ref,&nu,&rho) )  break;
         nf--;
       }
       while ( k < nf );
       /* put nf into k */
-      memcpy(&nsst->mesh.tria[k],&nsst->mesh.tria[nf],sizeof(Tria));
+      if ( k < nf )  memcpy(&nsst->mesh.tria[k],&nsst->mesh.tria[nf],sizeof(Tria));
       nf--;
     }
     k++;
