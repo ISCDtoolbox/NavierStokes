@@ -156,7 +156,7 @@ int pack_3d(NSst *nsst) {
               pa->v[1] > nsst->info.np || pa->v[1] == 0) )  break;
         nf--;
       }
-      while ( k < nf );
+      while ( k <= nf );
       /* put nf in k */
       if ( k < nf ) {
         memcpy(&nsst->mesh.edge[k],&nsst->mesh.edge[nf],sizeof(Edge));
@@ -301,7 +301,7 @@ int pack_2d(NSst *nsst) {
               pa->v[1] > nsst->info.np || pa->v[1] == 0) )  break;
         nf--;
       }
-      while ( k < nf );
+      while ( k <= nf );
       /* put nf in k */
       if ( k < nf ) {
         memcpy(&nsst->mesh.edge[k],&nsst->mesh.edge[nf],sizeof(Edge));
