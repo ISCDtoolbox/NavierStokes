@@ -6,6 +6,7 @@ int pack_3d(NSst *nsst) {
   pTetra    pe;
   pTria     pt;
   pEdge     pa;
+  pPoint    ppt;
   double    nu,rho,w[3];
   int      *prm,i,k,nf,id;
 
@@ -97,6 +98,11 @@ int pack_3d(NSst *nsst) {
         pe->adj[i] = 4*prm[pe->adj[i]/4] + pe->adj[i] % 4;
     }
   }
+  /* update simplices */
+  for (k=1; k<=nsst->info.npi; k++) {
+    ppt = &nsst->mesh.point[k];
+    if ( ppt->s > 0 )  ppt->s = prm[ppt->s];
+  }
   free(prm);
 
   /* renum triangles */
@@ -173,6 +179,7 @@ int pack_3d(NSst *nsst) {
 int pack_2d(NSst *nsst) {
   pTria     pt;
   pEdge     pa;
+  pPoint    ppt;
   double    nu,rho,w[2];
   int      *prm,i,k,nf,id;
 
@@ -246,7 +253,9 @@ int pack_2d(NSst *nsst) {
       while ( k < nf );
       /* put nf into k */
       if ( k < nf ) {
-        memcpy(&nsst->mesh.tria[k],&nsst->mesh.tria[nf],sizeof(Tria));
+        memcpy(&nsst->mesh.tria[0],&nsst->mesh.tria[nf],sizeof(Tria));
+        memcpy(&nsst->mesh.tria[nf],&nsst->mesh.tria[k],sizeof(Tria));
+        memcpy(&nsst->mesh.tria[k],&nsst->mesh.tria[0],sizeof(Tria));
         prm[k]  = nf;
         prm[nf] = k;
         nf--;
@@ -263,6 +272,11 @@ int pack_2d(NSst *nsst) {
       if ( pt->adj[i] > 0 )
         pt->adj[i] = 3*prm[pt->adj[i]/3] + pt->adj[i] % 3;
     }
+  }
+  /* update simplices */
+  for (k=1; k<=nsst->info.npi; k++) {
+    ppt = &nsst->mesh.point[k];
+    if ( ppt->s > 0 )  ppt->s = prm[ppt->s];
   }
   free(prm);
 

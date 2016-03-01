@@ -715,7 +715,6 @@ int nstokes1_2d(NSst *nsst) {
       /* right-hand side */
       memcpy(Fk,F,nsst->info.dim*sz*sizeof(double));
       ier = rhsFu_2d(nsst,Fk);
-      ier = nsst->info.typ == P1 ? rhsF_P1_2d(nsst,Fk) : rhsF_P2_2d(nsst,Fk);
 
       /* Uzawa solver */
       res = nsst->sol.res;

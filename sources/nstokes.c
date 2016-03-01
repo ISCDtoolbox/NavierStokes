@@ -394,6 +394,13 @@ static int parsop(NSst *nsst) {
     }
   }
   fclose(in);
+  
+  for (i=0; i<nsst->sol.nbcl; i++) {
+    pcl = &nsst->sol.cl[i];
+		nsst->sol.cltyp |= pcl->typ;
+    nsst->sol.clelt |= pcl->elt;
+  }
+
   if ( (npar > 0) && (nsst->info.verb != '0') )  fprintf(stdout," %d parameters\n",npar);
 
   return(1);
@@ -497,9 +504,7 @@ int main(int argc,char **argv) {
     if ( !ier )  return(1);
   }
 
-  /* counting P1b|P2 nodes */
-  nsst.info.dim == 2 ? addnod_2d(&nsst) : addnod_3d(&nsst);
-  /* and setting adjacency */
+  /* setting adjacency */
   if ( (nsst.sol.sim == Navier) || (nsst.sol.cltyp & Tension) )    
 	  nsst.info.dim == 2 ? hashel_2d(&nsst) : hashel_3d(&nsst);
 
@@ -511,6 +516,9 @@ int main(int argc,char **argv) {
 		  return(1);
 		}
 	}
+
+  /* counting P1b|P2 nodes */
+  nsst.info.dim == 2 ? addnod_2d(&nsst) : addnod_3d(&nsst);
 
 	chrono(OFF,&nsst.info.ctim[1]);
 	printim(nsst.info.ctim[1].gdif,stim);
