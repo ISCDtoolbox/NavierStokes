@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_BUILD_TYPE  "Release")
 INCLUDE_DIRECTORIES(  "$ENV{HOME}/include")
 LINK_DIRECTORIES(     "$ENV{HOME}/lib")
-SET(CMAKE_CXX_FLAGS   "-Wunused-result -Wno-dev")
+SET(CMAKE_CXX_FLAGS   "-Wunused-result -Wno-dev -g -O3")
 set(CMAKE_MACOSX_RPATH 1)
 
 #NavierStokes library

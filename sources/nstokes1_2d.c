@@ -423,7 +423,7 @@ static int slipon_2d(NSst *nsst,pCsr A) {
 static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
   pTria    pt;
   pCl      pcl;
-  double  *a,*b,*c,Ae[12][12],Be[6][6];
+  double  *a,*b,*c,vt,Ae[12][12],Be[6][6];
   double   rho,nu;
   int      i,j,k,dof,ier,nra,nca,nrb,ncb,nbe,ig,jg;
 
@@ -452,6 +452,7 @@ static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
   }
 
   /* stiffness and mass matrices assembly */
+  vt = 0.0;
   for (k=1; k<=nsst->info.nt; k++) {
     pt = &nsst->mesh.tria[k];
 
@@ -462,7 +463,7 @@ static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
     a = &nsst->mesh.point[pt->v[0]].c[0]; 
     b = &nsst->mesh.point[pt->v[1]].c[0]; 
     c = &nsst->mesh.point[pt->v[2]].c[0]; 
-
+vt += area_2d(a,b,c);
     /* local stiffness matrix A */
     if ( nsst->info.typ == P1 ) {
       ier  = matAe_P1(a,b,c,nsst->sol.dt,nu,rho,Ae);
@@ -504,6 +505,7 @@ static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
   if ( (nsst->sol.cltyp & Slip) && (nsst->info.na > 0) ) {
     ier = slipon_2d(nsst,A);
   }
+  printf("vtot = %e\n",vt);
   setTGV_2d(nsst,A);
   csrPack(A);
   csrPack(B);
@@ -697,7 +699,7 @@ int nstokes1_2d(NSst *nsst) {
 	  nsst->sol.un = (double*)calloc(nsst->info.dim*sz,sizeof(double));
 	  assert(nsst->sol.un);
     Fk = (double*)calloc(nsst->info.dim*sz,sizeof(double));
-    assert(F);
+    assert(Fk);
     it = jt = 1;
     do {
       nsst->sol.tim += nsst->sol.dt;
