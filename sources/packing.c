@@ -33,7 +33,7 @@ int pack_3d(NSst *nsst) {
   k  = 1;
   while ( k <= nf ) {
     if ( nsst->mesh.point[k].new == 0 ) {
-      while ( (nsst->mesh.point[nf].new == 0) && (k < nf) )  nf--;
+      while ( (nsst->mesh.point[nf].new == 0) && (k <= nf) )  nf--;
       if ( k < nf ) {
         /* swap k and nf */
         memcpy(&nsst->mesh.point[0],&nsst->mesh.point[nf],sizeof(Point));
@@ -77,10 +77,12 @@ int pack_3d(NSst *nsst) {
         if ( getMat(&nsst->sol,pe->ref,&nu,&rho) )  break;
         nf--;
       }
-      while ( k < nf );
+      while ( k <= nf );
       /* put nf into k */
       if ( k < nf ) {
-        memcpy(&nsst->mesh.tetra[k],&nsst->mesh.tetra[nf],sizeof(Tetra));
+        memcpy(&nsst->mesh.tetra[0],&nsst->mesh.tetra[nf],sizeof(Tetra));
+        memcpy(&nsst->mesh.tetra[nf],&nsst->mesh.tetra[k],sizeof(Tetra));
+        memcpy(&nsst->mesh.tetra[k],&nsst->mesh.tetra[0],sizeof(Tetra));
         prm[k]  = nf;
         prm[nf] = k;
         nf--;
@@ -124,10 +126,12 @@ int pack_3d(NSst *nsst) {
         if ( i == 3 )  break;
         nf--;
       }
-      while ( k < nf );
+      while ( k <= nf );
       /* put nf in k */
       if ( k < nf ) {
-        memcpy(&nsst->mesh.tria[k],&nsst->mesh.tria[nf],sizeof(Tria));
+        memcpy(&nsst->mesh.tria[0],&nsst->mesh.tria[nf],sizeof(Tria));
+        memcpy(&nsst->mesh.tria[nf],&nsst->mesh.tria[k],sizeof(Tria));
+        memcpy(&nsst->mesh.tria[k],&nsst->mesh.tria[0],sizeof(Tria));
         nf--;
       }
     }
@@ -250,7 +254,7 @@ int pack_2d(NSst *nsst) {
         if ( getMat(&nsst->sol,pt->ref,&nu,&rho) )  break;
         nf--;
       }
-      while ( k < nf );
+      while ( k <= nf );
       /* put nf into k */
       if ( k < nf ) {
         memcpy(&nsst->mesh.tria[0],&nsst->mesh.tria[nf],sizeof(Tria));
