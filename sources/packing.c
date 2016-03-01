@@ -117,12 +117,12 @@ int pack_3d(NSst *nsst) {
   while ( k <= nf ) {
     pt = &nsst->mesh.tria[k];
     for (i=0; i<3; i++)
-      if ( pt->v[i] > nsst->info.np || pt->v[i] == 0 )  break;
+      if ( pt->v[i] > nsst->info.np )  break;
     if ( i < 3 ) {
       do {
         pt = &nsst->mesh.tria[nf];
         for (i=0; i<3; i++)
-          if ( pt->v[i] > nsst->info.np || pt->v[i] == 0 )  break;
+          if ( pt->v[i] > nsst->info.np )  break;
         if ( i == 3 )  break;
         nf--;
       }
