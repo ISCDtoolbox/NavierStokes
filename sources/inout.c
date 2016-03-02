@@ -114,10 +114,10 @@ int loadMesh(NSst *nsst) {
   GmfCloseMesh(inm);
 
   if ( nsst->info.verb != '0' ) {
-    fprintf(stdout," %d vertices",nsst->info.np);
-    if ( nsst->info.na )  fprintf(stdout,", %d edges",nsst->info.na);
-    if ( nsst->info.nt )  fprintf(stdout,", %d triangles",nsst->info.nt);
-    if ( nsst->info.ne )  fprintf(stdout,", %d tetrahedra",nsst->info.ne);
+    fprintf(stdout," %d vertices",nsst->info.npi);
+    if ( nsst->info.na )  fprintf(stdout,", %d edges",nsst->info.nai);
+    if ( nsst->info.nt )  fprintf(stdout,", %d triangles",nsst->info.nti);
+    if ( nsst->info.ne )  fprintf(stdout,", %d tetrahedra",nsst->info.nei);
     fprintf(stdout,"\n");
   }
 

@@ -140,7 +140,7 @@ int pack_3d(NSst *nsst) {
   nsst->info.nt = nf;
 
   /* renum edges */
-  for (k=1; k<=nsst->info.na; k++) {
+  for (k=1; k<=nsst->info.nai; k++) {
     pa = &nsst->mesh.edge[k];
     for (i=0; i<2; i++)  pa->v[i] = nsst->mesh.point[pa->v[i]].new;
   }
@@ -151,7 +151,7 @@ int pack_3d(NSst *nsst) {
     if ( (pa->v[0] > nsst->info.np) || (pa->v[1] > nsst->info.np) ) {
       do {
         pa = &nsst->mesh.edge[nf];
-        if ( (pa->v[0] > nsst->info.np) || (pa->v[1] > nsst->info.np) )  break;
+        if ( (pa->v[0] <= nsst->info.np) && (pa->v[1] <= nsst->info.np) )  break;
         nf--;
       }
       while ( k <= nf );
@@ -283,7 +283,7 @@ int pack_2d(NSst *nsst) {
   free(prm);
 
   /* compress and renum edges */
-  for (k=1; k<=nsst->info.na; k++) {
+  for (k=1; k<=nsst->info.nai; k++) {
     pa = &nsst->mesh.edge[k];
     for (i=0; i<2; i++)  pa->v[i] = nsst->mesh.point[pa->v[i]].new;
   }
@@ -294,7 +294,7 @@ int pack_2d(NSst *nsst) {
     if ( (pa->v[0] > nsst->info.np) || (pa->v[1] > nsst->info.np) ) {
       do {
         pa = &nsst->mesh.edge[nf];
-        if ( (pa->v[0] > nsst->info.np) || (pa->v[1] > nsst->info.np) )  break;
+        if ( (pa->v[0] <= nsst->info.np) && (pa->v[1] <= nsst->info.np) )  break;
         nf--;
       }
       while ( k <= nf );
