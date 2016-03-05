@@ -127,7 +127,7 @@ int loadMesh(NSst *nsst) {
 
 /* load initial solution */
 int loadSol(NSst *nsst) {
-  float       buf[GmfMaxTyp];
+  float       fp,buf[GmfMaxTyp];
   double      bufd[GmfMaxTyp];
   int         i,k,dim,ver,np,type,inm,typtab[GmfMaxTyp],offset;
   char       *ptr,data[128];
@@ -182,14 +182,16 @@ int loadSol(NSst *nsst) {
     }
   }
 
-  if ( GmfStatKwd(inm,GmfTime) ) {
+  if ( 1 || GmfStatKwd(inm,GmfTime) ) {
     GmfGotoKwd(inm,GmfTime);
     if ( nsst->info.ver == GmfFloat ) {
-      GmfGetLin(inm,GmfTime,&buf[0]);
+      GmfGetLin(inm,GmfTime,buf);
       nsst->sol.tim = (double)buf[0];
     }
-    else
-      GmfGetLin(inm,GmfTime,&nsst->sol.tim);
+    else {
+      GmfGetLin(inm,GmfTime,bufd);
+      nsst->sol.tim = bufd[0];
+    }
   }
   GmfCloseMesh(inm); 
 
@@ -263,7 +265,7 @@ int saveSol(NSst *nsst,int it) {
   }
 
   /* unsteady case */
-  if ( nsst->sol.tim > 0.0 ) {
+  if ( nsst->sol.dt > 0.0 || nsst->sol.tim > 0.0 ) {
     GmfSetKwd(outm,GmfTime);
     if ( nsst->info.ver == GmfFloat ) {
       tmpf = nsst->sol.tim;

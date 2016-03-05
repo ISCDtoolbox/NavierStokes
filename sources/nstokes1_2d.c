@@ -711,7 +711,6 @@ int nstokes1_2d(NSst *nsst) {
         ier = nsst->info.typ == P1 ? advect_P1_2d(nsst) : advect_P2_2d(nsst);
         if ( !ier )  break;
       }
-
       /* right-hand side */
       memcpy(Fk,F,nsst->info.dim*sz*sizeof(double));
       ier = rhsFu_2d(nsst,Fk);
@@ -720,11 +719,12 @@ int nstokes1_2d(NSst *nsst) {
       res = nsst->sol.res;
       nit = nsst->sol.nit;
       ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,'0');
-      if ( ier < 1 )  break;
       if ( nsst->info.verb != '0' ) {
-        fprintf(stdout,"     iteration %d: res=%E, nit=%5d\r",it,res,nit);
+        fprintf(stdout,"     iteration %d: res=%E, nit=%5d, time=%8.4f s\r",it,res,nit,nsst->sol.tim);
         fflush(stdout);
       }
+      if ( ier < 1 )  break;
+
       /* save solution */
       if ( nsst->sol.ts > 0 && it % nsst->sol.ts == 0 ) {
         verb = nsst->info.verb;

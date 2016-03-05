@@ -96,9 +96,10 @@ double kappa_2d(pMesh mesh,int ip,double *n,double *len) {
   n[0] = uy - vy;
   n[1] = vx - ux;
   dd   = sqrt(n[0]*n[0] + n[1]*n[1]);
-  n[0] /= dd;
-  n[1] /= dd;
-
+  if ( dd > NS_EPSD ) {
+    n[0] /= dd;
+    n[1] /= dd;
+  }
   /* free interface (not closed) */
   if ( p2->ref != p0->ref || p1->ref != p0->ref ) {
     return(kappa);
@@ -107,9 +108,16 @@ double kappa_2d(pMesh mesh,int ip,double *n,double *len) {
   /* compute algebraic curvature */
   d1 = ux*n[0] + uy*n[1];
   d2 = vx*n[0] + vy*n[1];
-  k1 = (ux*ux + uy*uy) / d1;
-  k2 = (vx*vx + vy*vy) / d2;
-  kappa = 4.0 / (k1+k2);
+  if ( fabs(d1) > NS_EPSD )
+    k1 = (ux*ux + uy*uy) / d1;
+  else
+    return(kappa);
+  if ( fabs(d2) > NS_EPSD )
+    k2 = (vx*vx + vy*vy) / d2;
+  else
+    return(kappa);
+  if ( fabs(k1+k2) > NS_EPSD )
+    kappa = 4.0 / (k1+k2);
 
   return(kappa);
 }
