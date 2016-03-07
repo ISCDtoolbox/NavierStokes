@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/ICStoolbox/NavierStokes.svg?branch=master)](https://travis-ci.org/ICStoolbox/NavierStokes)
 # nstokes
 Nstokes is a finite element solver for Stokes and Navier-Stokes incompressible flow problems in two and three dimensions.
 
