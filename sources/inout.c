@@ -181,8 +181,11 @@ int loadSol(NSst *nsst) {
       nsst->sol.p[k] = bufd[i];
     }
   }
-
-  if ( 1 || GmfStatKwd(inm,GmfTime) ) {
+  if ( GmfStatKwd(inm,GmfIterations) ) {
+    GmfGotoKwd(inm,GmfIterations);
+    GmfGetLin(inm,GmfTime,&np);
+  }
+  if ( GmfStatKwd(inm,GmfTime) ) {
     GmfGotoKwd(inm,GmfTime);
     if ( nsst->info.ver == GmfFloat ) {
       GmfGetLin(inm,GmfTime,buf);
@@ -265,6 +268,10 @@ int saveSol(NSst *nsst,int it) {
   }
 
   /* unsteady case */
+  if ( nsst->sol.nt > 1 ) {
+    GmfSetKwd(outm,GmfIterations);
+    GmfSetLin(outm,GmfIterations,nsst->sol.nt); 
+  }
   if ( nsst->sol.dt > 0.0 || nsst->sol.tim > 0.0 ) {
     GmfSetKwd(outm,GmfTime);
     if ( nsst->info.ver == GmfFloat ) {
