@@ -39,6 +39,7 @@
 typedef struct {
   double  c[3];         /* coordinates */
   int     ref,s,new;    /* label and seed for simplex, new:perm */
+  char    tag;
 } Point;
 typedef Point * pPoint;
 

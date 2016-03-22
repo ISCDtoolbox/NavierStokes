@@ -11,7 +11,7 @@ int loadMesh(NSst *nsst) {
   pTetra     pt;
   double    *a,*b,*c,*d,aire,vol;
   float      fp1,fp2,fp3;
-  int        i,k,dof,inm,nf,tmp;
+  int        i,k,dof,inm,nf,nc,tmp;
   char      *ptr,data[256];
 
   strcpy(data,nsst->mesh.name);
@@ -109,6 +109,18 @@ int loadMesh(NSst *nsst) {
     for (k=1; k<=nsst->info.ne; k++) {
       pt = &nsst->mesh.tetra[k];
       GmfGetLin(inm,GmfTetrahedra,&pt->v[0],&pt->v[1],&pt->v[2],&pt->v[3],&pt->ref);
+    }
+  }
+  /* look for corners */
+  nc = GmfStatKwd(inm,GmfCorners);
+  if ( nc ) {
+    GmfGotoKwd(inm,GmfCorners);
+    for (k=1; k<=nc; k++) {
+      GmfGetLin(inm,GmfCorners,&tmp);
+      if ( tmp > 0 && tmp <= nsst->info.npi ) {
+        ppt = &nsst->mesh.point[tmp];
+        ppt->tag |= Corner;
+      }
     }
   }
   GmfCloseMesh(inm);

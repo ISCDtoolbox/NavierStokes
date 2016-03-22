@@ -5,6 +5,7 @@ enum {Dirichlet=1, Neumann=2, Tension=4, Slip=8, AtmPres=16, Gravity=32};
 enum {P1=1, P2};
 enum {NS_ver=1,NS_edg=2,NS_tri=4,NS_tet=8};
 enum {Stokes=1, Navier=2};
+enum {Corner=1, Ridge=2, Boundary=4};
 
 /* data structure */
 typedef struct _NSst NSst;

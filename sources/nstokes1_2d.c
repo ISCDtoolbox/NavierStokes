@@ -558,6 +558,7 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
     nc  = 0;
     for (k=1; k<=nsst->info.np; k++) {
       ppt = &nsst->mesh.point[k];
+      if ( ppt->tag & Corner )  continue;
 
       /* surface tension */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Tension);
@@ -570,8 +571,6 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
       /* atmospheric pressure */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,AtmPres);
       if ( !pcl )  continue;
-      kappa = kappa_2d(&nsst->mesh,k,n,&len);
-      /* ATTENTION AU SIGNE ICI */
       F[2*(k-1)+0] -= -0.5 * len * pcl->u[0] * n[0];
       F[2*(k-1)+1] -= -0.5 * len * pcl->u[1] * n[1];
       nc++;
@@ -584,7 +583,7 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
     nc = 0;
     for (k=1; k<=nsst->info.np; k++) {
       ppt = &nsst->mesh.point[k];
-      
+
       /* Dirichlet conditions */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
 			if ( !pcl )  continue;
