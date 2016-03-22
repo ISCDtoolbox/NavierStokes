@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_BUILD_TYPE  "Release")
 INCLUDE_DIRECTORIES(  "$ENV{HOME}/include")
 LINK_DIRECTORIES(     "$ENV{HOME}/lib")
-SET(CMAKE_CXX_FLAGS   "-Wunused-result -Wno-dev -g -O3")
+SET(CMAKE_CXX_FLAGS   "-w -g -O3")
 set(CMAKE_MACOSX_RPATH 1)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 #NavierStokes library
 project(NavierStokes)
@@ -19,11 +20,5 @@ INSTALL(               FILES ${header_files} DESTINATION "$ENV{HOME}/include")
 project(main)
 add_executable(        nstokes sources/nstokes.c)
 target_link_libraries( nstokes Commons NavierStokes)
-
 INSTALL(               TARGETS nstokes RUNTIME DESTINATION "$ENV{HOME}/bin")
-set_property(TARGET    nstokes PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-
- 
-
-
 
