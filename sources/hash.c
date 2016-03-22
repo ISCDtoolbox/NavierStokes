@@ -172,19 +172,19 @@ int hashel_3d(NSst *nsst) {
 
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    Adjacency table: ");
 
-  /* alloc hash */
-  ht.nmax = (int)(12.71 * nsst->info.np);
+  /* alloc hash (all nodes considered) */
+  ht.nmax = (int)(12.71 * nsst->info.npi);
   ht.cell = (Cell*)calloc(ht.nmax+2,sizeof(Cell));
   assert(ht.cell);
 
-  ht.hsiz = nsst->info.np;
+  ht.hsiz = nsst->info.npi;
   ht.hnxt = ht.hsiz;
   for (k=ht.hsiz; k<ht.nmax; k++)
     ht.cell[k].nxt = k+1;
 
   /* update */
   nt = 0;
-  for (k=1; k<=nsst->info.ne; k++) {
+  for (k=1; k<=nsst->info.nei; k++) {
     pt = &nsst->mesh.tetra[k];
     for (i=0; i<4; i++) {
       i1 = (i+1) % 4;
