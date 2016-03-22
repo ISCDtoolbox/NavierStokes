@@ -227,19 +227,19 @@ int hashel_2d(NSst *nsst) {
 
   if ( nsst->info.verb == '+' )  fprintf(stdout,"    Adjacency table: ");
 
-  /* alloc hash */
-  ht.nmax = (int)(3.71 * nsst->info.np);
+  /* alloc hash (all nodes considered) */
+  ht.nmax = (int)(3.71 * nsst->info.npi);
   ht.cell = (Cell*)calloc(ht.nmax+2,sizeof(Cell));
   assert(ht.cell);
 
-  ht.hsiz = 2 * nsst->info.np;
+  ht.hsiz = 2 * nsst->info.npi;
   ht.hnxt = ht.hsiz;
   for (k=ht.hsiz; k<ht.nmax; k++)
     ht.cell[k].nxt = k+1;
 
   /* update adjacency */
   na = 0;
-  for (k=1; k<=nsst->info.nt; k++) {
+  for (k=1; k<=nsst->info.nti; k++) {
     pt = &nsst->mesh.tria[k];
     for (i=0; i<3; i++) {
       i1 = (i+1) % 3;

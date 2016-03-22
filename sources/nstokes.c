@@ -504,10 +504,6 @@ int main(int argc,char **argv) {
     if ( !ier )  return(1);
   }
 
-  /* setting adjacency */
-  if ( (nsst.sol.sim == Navier) || (nsst.sol.cltyp & Tension) )    
-	  nsst.info.dim == 2 ? hashel_2d(&nsst) : hashel_3d(&nsst);
-
   /* packing mesh if needed */
   if ( nsst.sol.nmat ) {
     ier = nsst.info.dim == 2 ? pack_2d(&nsst) : pack_3d(&nsst);
@@ -516,6 +512,10 @@ int main(int argc,char **argv) {
 		  return(1);
 		}
 	}
+
+  /* setting adjacency */
+  if ( (nsst.sol.sim == Navier) || (nsst.sol.cltyp & Tension) )    
+	  nsst.info.dim == 2 ? hashel_2d(&nsst) : hashel_3d(&nsst);
 
   /* counting P1b|P2 nodes */
   nsst.info.dim == 2 ? addnod_2d(&nsst) : addnod_3d(&nsst);

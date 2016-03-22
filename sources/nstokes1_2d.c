@@ -705,7 +705,7 @@ int nstokes1_2d(NSst *nsst) {
       nsst->sol.tim += nsst->sol.dt;
       /* copy solution at time u^n */
       memcpy(nsst->sol.un,nsst->sol.u,nsst->info.dim*sz*sizeof(double));
-      
+
       /* non-linear term: u_t + u\nabla u */
       if ( nsst->sol.sim == Navier ) {
         ier = nsst->info.typ == P1 ? advect_P1_2d(nsst) : advect_P2_2d(nsst);
