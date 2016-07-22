@@ -81,7 +81,7 @@ static int hcode_3d(Tetra *tetra,Htab *ht,int a,int b,int c,int k,int i) {
   do {
     pt1 = &tetra[pc->elt];
     if ( pc->min == min && pc->max == max ) {
-      adj = pt1->adj[pc->ind];
+      adj = pt1->adj[pc->ind] / 4;
       if ( !adj ) {
         pt->adj[i]        = 4*pc->elt+pc->ind;
         pt1->adj[pc->ind] = 4*k+i;
@@ -134,7 +134,7 @@ static int hcode_2d(Tria *tria,Htab *ht,int a,int b,int k,int i) {
   do {
     pt1 = &tria[pc->elt];
     if ( pc->min == abmin ) {
-      adj = pt1->adj[pc->ind];
+      adj = pt1->adj[pc->ind] / 3;
       if ( !adj ) {
         pt->adj[i]        = 3*pc->elt+pc->ind;
         pt1->adj[pc->ind] = 3*k+i;

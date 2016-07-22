@@ -55,7 +55,7 @@ static void usage(char *prog) {
   -mt val      max time (time units)\n\
   -nt n        number of time steps\n\
   -n nit       number of iterations max for convergence\n\
-  -r res       value of the residual (Krylov space) for convergence\n\
+  -r res       value of the residual (Krylov space) for convergence (default: %e)\n\
   -t typ       specify the type of FE space: 1: P1bP1(*), 2: P2P1\n\
   -ts n        save solution every n time steps\n\
   -v           suppress any message (for use with function call).\n\
@@ -63,7 +63,7 @@ static void usage(char *prog) {
   source.mesh    name of the mesh file\n\
   param.elas     name of file containing elasticity parameters\n\
   data.sol       name of file containing the initial solution or boundary conditions\n\
-  output.sol     name of the output file (displacement field)\n");
+  output.sol     name of the output file (displacement field)\n",NS_RES);
   exit(1);
 }
 
@@ -338,7 +338,7 @@ static int parsop(NSst *nsst) {
         else if ( !strcmp(buf,"edges") || !strcmp(buf,"edge") )          pcl->elt = NS_edg;
         else if ( !strcmp(buf,"triangles") || !strcmp(buf,"triangle") )  pcl->elt = NS_tri;
 
-        /* for the time being: no normal et vertices known */
+        /* for the time being: no normal at vertices known */
         if ( (pcl->elt == NS_ver) && (pcl->att == 'n') ) {
           if ( nsst->info.verb != '0' )  fprintf(stdout,"\n # condition not allowed: [%s] %c\n",buf,pcl->att);
           return(0);
@@ -538,7 +538,7 @@ int main(int argc,char **argv) {
   chrono(OFF,&nsst.info.ctim[2]);
   if ( nsst.info.verb != '0' ) {
 		printim(nsst.info.ctim[2].gdif,stim);
-    if ( ier )  
+    if ( ier )
       fprintf(stdout," ** COMPLETED: %s\n\n",stim);
     else
       fprintf(stdout," ** NOT COMPLETED!: %s\n\n",stim);
