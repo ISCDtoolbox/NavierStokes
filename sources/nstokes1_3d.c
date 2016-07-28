@@ -15,7 +15,7 @@ static inline double volu_3d(double *a,double *b,double *c,double *d) {
   dx  = d[0] - a[0];
   dy  = d[1] - a[1];
   dz  = d[2] - a[2];
-  
+
   /* test volume */
   vx  = cy*dz - cz*dy;
   vy  = cz*dx - cx*dz;
