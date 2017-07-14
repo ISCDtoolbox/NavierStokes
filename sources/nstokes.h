@@ -16,7 +16,7 @@
 
 #define NS_VER   "5.2a"
 #define NS_REL   "Jan. 29, 2016"
-#define NS_CPY   "(C) Copyright 2006- , ICS-SU"
+#define NS_CPY   "(C) Copyright 2006- , ISCD-SU"
 
 #define NS_NU     1.0
 #define NS_RHO    1.0
