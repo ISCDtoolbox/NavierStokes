@@ -15,6 +15,7 @@ NSst *NS_init(int dim, int ver, char typ,char mfree);
 int   NS_stop(NSst *nsst);
 
 int   NS_nstokes(NSst *nsst);
+int   NS_vorticity(NSst *nsst);
 
 
 #endif

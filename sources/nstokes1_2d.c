@@ -423,7 +423,7 @@ static int slipon_2d(NSst *nsst,pCsr A) {
 static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
   pTria    pt;
   pCl      pcl;
-  double  *a,*b,*c,vt,Ae[12][12],Be[6][6];
+  double  *a,*b,*c,Ae[12][12],Be[6][6];
   double   rho,nu;
   int      i,j,k,dof,ier,nra,nca,nrb,ncb,nbe,ig,jg;
 
@@ -452,7 +452,6 @@ static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
   }
 
   /* stiffness and mass matrices assembly */
-  vt = 0.0;
   for (k=1; k<=nsst->info.nt; k++) {
     pt = &nsst->mesh.tria[k];
 
@@ -463,7 +462,7 @@ static int matAB_2d(NSst *nsst,pCsr A,pCsr B) {
     a = &nsst->mesh.point[pt->v[0]].c[0]; 
     b = &nsst->mesh.point[pt->v[1]].c[0]; 
     c = &nsst->mesh.point[pt->v[2]].c[0]; 
-vt += area_2d(a,b,c);
+
     /* local stiffness matrix A */
     if ( nsst->info.typ == P1 ) {
       ier  = matAe_P1(a,b,c,nsst->sol.dt,nu,rho,Ae);
@@ -505,7 +504,6 @@ vt += area_2d(a,b,c);
   if ( (nsst->sol.cltyp & Slip) && (nsst->info.na > 0) ) {
     ier = slipon_2d(nsst,A);
   }
-  printf("vtot = %e\n",vt);
   setTGV_2d(nsst,A);
   csrPack(A);
   csrPack(B);
@@ -679,6 +677,12 @@ int nstokes1_2d(NSst *nsst) {
   F = (double*)calloc(nsst->info.dim*sz,sizeof(double));
   assert(F);
   ier = nsst->info.typ == P1 ? rhsF_P1_2d(nsst,F) : rhsF_P2_2d(nsst,F);
+  if ( ! ier ) {
+    free(nsst->sol.u);
+    free(nsst->sol.p);
+    free(F);
+    return(ier > 0);
+  }
 
   /* -- Part II: solver */
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    Solving linear system:\n");
@@ -695,10 +699,12 @@ int nstokes1_2d(NSst *nsst) {
   }
   /* unsteady problem */
   else {
-	  nsst->sol.un = (double*)calloc(nsst->info.dim*sz,sizeof(double));
+	  /* memory allocation */
+    nsst->sol.un = (double*)calloc(nsst->info.dim*sz,sizeof(double));
 	  assert(nsst->sol.un);
     Fk = (double*)calloc(nsst->info.dim*sz,sizeof(double));
     assert(Fk);
+
     it = jt = 1;
     do {
       nsst->sol.tim += nsst->sol.dt;
@@ -743,9 +749,11 @@ int nstokes1_2d(NSst *nsst) {
       if ( !nsst->info.zip )  free(nsst->mesh.point);
     }
     free(Fk);
+    free(nsst->sol.un);
   }
   free(F);
 
   return(ier > 0);
 }
+
 

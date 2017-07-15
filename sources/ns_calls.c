@@ -269,12 +269,25 @@ int NS_nstokes(NSst *nsst) {
     nsst->sol.clelt |= pcl->elt;
   }
 
-  if ( nsst->info.dim == 2)
+  if ( nsst->info.dim == 2 )
 		ier = nstokes1_2d(nsst);
 	else
 		ier = nstokes1_3d(nsst);
 
 	return(ier);	
 }
+
+
+int NS_vorticity(NSst *nsst) {
+  int   ier;
+
+  if ( nsst->info.dim == 2 )
+    ier = vorticity_2d(nsst);
+  else
+    ier = vorticity_3d(nsst);
+
+  return(ier);
+}
+
 
 

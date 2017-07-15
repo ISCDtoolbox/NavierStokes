@@ -61,7 +61,7 @@ typedef Tetra * pTetra;
 typedef struct {
 	int      dim,ver;
 	int      np,np2,na,nt,ne,npi,nai,nti,nei;
-  char     verb,typ,zip,mfree;
+  char     verb,typ,zip,mfree,vort;
   mytime   ctim[TIMEMAX];
 } Info;
 
@@ -103,10 +103,12 @@ struct _NSst{
 	Info    info;
 };
 
+
 /* prototypes */
 int  loadMesh(NSst *nsst);
 int  loadSol(NSst *nsst);
 int  saveSol(NSst *nsst,int it);
+int  saveVor(NSst *nsst);
 int  pack_2d(NSst *nsst);
 int  pack_3d(NSst *nsst);
 int  unpack(NSst *nsst);
@@ -122,6 +124,8 @@ int  advect_P1_3d(NSst *nsst);
 int  advect_P2_3d(NSst *nsst);
 int  nstokes1_2d(NSst *nsst);
 int  nstokes1_3d(NSst *nsst);
+int  vorticity_2d(NSst *nsst);
+int  vorticity_3d(NSst *nsst);
 
 double kappa_2d(pMesh mesh,int ip,double *n,double *len);
 

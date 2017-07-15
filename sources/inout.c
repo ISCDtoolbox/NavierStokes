@@ -300,3 +300,44 @@ int saveSol(NSst *nsst,int it) {
   return(1);
 }
 
+
+/* save vorticity solution */
+int saveVor(NSst *nsst) {
+  double       dbuf[GmfMaxTyp];
+  float        fbuf[GmfMaxTyp];
+  int          k,outm,type,typtab[GmfMaxTyp];
+
+  if ( !nsst->sol.un )
+    return(0);
+
+  if ( !(outm = GmfOpenMesh("vorticity.sol",GmfWrite,nsst->info.ver,nsst->info.dim)) ) {
+    fprintf(stderr," # unable to open vorticity file\n");
+    return(0);
+  }
+
+  type = 1;
+  typtab[0] = GmfSca;
+  GmfSetKwd(outm,GmfSolAtVertices,nsst->info.np,type,typtab);
+
+  if ( nsst->info.ver == GmfFloat ) {
+    for (k=0; k<nsst->info.np; k++) {
+      fbuf[0] = nsst->sol.un[k];
+      GmfSetLin(outm,GmfSolAtVertices,fbuf);
+    }
+  }
+  else {
+    for (k=0; k<nsst->info.np; k++) {
+      dbuf[0] = nsst->sol.un[k];
+      GmfSetLin(outm,GmfSolAtVertices,dbuf);
+    }    
+  }
+  GmfCloseMesh(outm);
+
+  /* release memory */
+	free(nsst->sol.un);
+	nsst->sol.un = NULL;
+
+  return(1);
+}
+
+

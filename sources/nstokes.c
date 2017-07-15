@@ -59,7 +59,8 @@ static void usage(char *prog) {
   -t typ       specify the type of FE space: 1: P1bP1(*), 2: P2P1\n\
   -ts n        save solution every n time steps\n\
   -v           suppress any message (for use with function call).\n\
-  +v           increase the verbosity level for output.\n\n\
+  +v           increase the verbosity level for output.\n\
+  -w           save vorticity file\n\n\
   source.mesh    name of the mesh file\n\
   param.elas     name of file containing elasticity parameters\n\
   data.sol       name of file containing the initial solution or boundary conditions\n\
@@ -209,6 +210,10 @@ static int parsar(int argc,char *argv[],NSst *nsst) {
           fprintf(stderr,"%s: illegal option %s\n",argv[0],argv[i]);
           usage(argv[0]);
         }
+        break;
+      case 'w':
+        nsst->info.vort  = 1;
+        nsst->info.mfree = 0;
         break;
       default:
         fprintf(stderr,"%s: illegal option %s\n",argv[0],argv[i]);
@@ -464,6 +469,7 @@ int main(int argc,char **argv) {
   nsst.info.zip    = 0;
   nsst.info.typ    = P1;    /* mini element */
   nsst.info.mfree  = 1;
+  nsst.info.vort   = 0;
 
   /* parse command line */
   if ( !parsar(argc,argv,&nsst) )  return(1);
@@ -551,6 +557,13 @@ int main(int argc,char **argv) {
 
   ier = saveSol(&nsst,0);
 	if ( !ier )   return(1);
+
+  /* compute vorticity */
+  if ( nsst.info.vort > 0 ) {
+    ier = NS_vorticity(&nsst);
+    if ( ier )  ier = saveVor(&nsst);
+  }
+
   chrono(OFF,&nsst.info.ctim[3]);
   if ( nsst.info.verb != '0' ) {
     printim(nsst.info.ctim[3].gdif,stim);
