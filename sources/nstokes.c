@@ -45,7 +45,7 @@ static void excfun(int sigid) {
 
 
 static void usage(char *prog) {
-  fprintf(stdout,"\n usage: %s [+/-v | -h | -N] [-dt step] [-mt val] [-nt n] [-n nit] [-r res] [-t typ] [-ts n] source[.mesh] [-p param[.elas]] [-s data[.sol]] [-o output[.sol]]\n",prog);
+  fprintf(stdout,"\n usage: %s [+/-v | -h | -N] [-dt step] [-mt val] [-nt n] [-n nit] [-r res] [-t typ] [-ts n] source[.mesh] [-p param[.nstokes]] [-s data[.sol]] [-o output[.sol]]\n",prog);
 
   fprintf(stdout,"\nOptions and flags:\n\
   --help       show the syntax and exit.\n\
@@ -62,7 +62,7 @@ static void usage(char *prog) {
   +v           increase the verbosity level for output.\n\
   -w           save vorticity file\n\n\
   source.mesh    name of the mesh file\n\
-  param.elas     name of file containing elasticity parameters\n\
+  param.nstokes  name of file containing flow parameters\n\
   data.sol       name of file containing the initial solution or boundary conditions\n\
   output.sol     name of the output file (displacement field)\n",NS_RES);
   exit(1);
@@ -158,8 +158,8 @@ static int parsar(int argc,char *argv[],NSst *nsst) {
       case 'p':
         if ( ++i < argc ) {
           nsst->sol.namepar = argv[i];
-          ptr = strstr(nsst->sol.namepar,".elas");
-          if ( !ptr )  strcat(nsst->sol.namepar,".elas");
+          ptr = strstr(nsst->sol.namepar,".nstokes");
+          if ( !ptr )  strcat(nsst->sol.namepar,".nstokes");
         }
         else {
           fprintf(stdout,"%s: missing parameter file\n", argv[0]);
