@@ -750,7 +750,7 @@ int nstokes1_3d(NSst *nsst) {
       /* Uzawa solver */
       res = nsst->sol.res;
       nit = nsst->sol.nit;
-      ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,nsst->info.verb);
+      ier = csrUzawa(&A,&B,nsst->sol.u,nsst->sol.p,Fk,&res,&nit,'0');
       if ( ier < 1 )  break;
       if ( nsst->info.verb != '0' ) {
         fprintf(stdout,"     iteration %d: res=%E, nit=%5d\r",it,res,nit);
