@@ -570,7 +570,6 @@ int main(int argc,char **argv) {
     fprintf(stdout," - COMPLETED: %s\n",stim);
   }
 
-  ghiaProf_2d(&nsst,0.5,0.5);
   /* free mem */
 	free(nsst.sol.u);
   free(nsst.sol.p);
