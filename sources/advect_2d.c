@@ -312,3 +312,52 @@ int advect_P1_2d(NSst *nsst) {
   return(1);
 }
 
+
+/* save velocity profiles along xc=cte and yc=cte for unit square */
+int ghiaProf_2d(NSst *nsst,double xc,double yc) {
+  FILE   *out;
+  double  dd,xp[2],cb[3],v[2];
+  int     k,iel,nbp;
+  char   *ptr,data[128];
+
+  ++nsst->mesh.mark;
+  nbp = 25;
+  dd  = 1.0 / (double)nbp;
+
+  /* save to file */
+  out = fopen("xprof_2D.gnu","w");
+  if ( !out )  return(0);
+
+  /* get x component of velocity along x=0.5 */
+  xp[0] = xc;
+  xp[1] = 0.0;
+  iel   = 1;
+  for (k=0; k<=nbp; k++) {
+    iel = locelt_2d(&nsst->mesh,iel,xp,cb);
+    if ( iel > 0 ) {
+      vecint_P1_2d(nsst->sol.u,nsst->mesh.tria[k].v,cb,v);
+      fprintf(out,"%g %g\n",xp[1],v[0]);
+    }
+    xp[1] += dd;
+  }
+  fclose(out);
+
+  /* y component of velocity */
+  out = fopen("yprof_2D.gnu","w");
+  if ( !out )  return(0);
+
+  xp[0] = 0.0;
+  xp[1] = yc;
+  iel   = 1;
+  for (k=0; k<=nbp; k++) {
+    iel = locelt_2d(&nsst->mesh,iel,xp,cb);
+    if ( iel > 0 ) {
+      vecint_P1_2d(nsst->sol.u,nsst->mesh.tria[k].v,cb,v);
+      fprintf(out,"%g %g\n",xp[0],v[1]);
+    }
+    xp[0] += dd;
+  }
+  fclose(out);
+
+  return(1);
+}
