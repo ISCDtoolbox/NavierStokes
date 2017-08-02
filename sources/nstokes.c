@@ -571,6 +571,7 @@ int main(int argc,char **argv) {
   }
 
   /* free mem */
+  if ( nsst.info.vort > 0 )  free(nsst.sol.un);
 	free(nsst.sol.u);
   free(nsst.sol.p);
   free(nsst.sol.cl);
