@@ -44,6 +44,7 @@ The options and flags are:
   -t typ       specify the type of FE space: 1: P1bP1(*), 2: P2P1
   -v           suppress any message (for use with function call).
   +v           increase the verbosity level for output.
+  -w           save vorticity file.
 
   source.mesh    name of the mesh file
   param.nstokes  name of file containing fluid parameters
