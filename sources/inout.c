@@ -302,15 +302,41 @@ int saveSol(NSst *nsst,int it) {
 
 
 /* save vorticity solution */
-int saveVor(NSst *nsst) {
+int saveVor(NSst *nsst,int it) {
   double       dbuf[GmfMaxTyp];
   float        fbuf[GmfMaxTyp];
   int          k,outm,type,typtab[GmfMaxTyp];
+  char        *ptr,data[128],buf[64];
 
-  if ( !nsst->sol.un )
-    return(0);
+  if ( !nsst->sol.w )  return(0);
 
-  if ( !(outm = GmfOpenMesh("vorticity.sol",GmfWrite,nsst->info.ver,nsst->info.dim)) ) {
+  strcpy(data,nsst->sol.nameout);
+  ptr = strstr(data,".mesh");
+  if ( ptr )  {
+    *ptr = '\0';
+    if ( it > 0 ) {
+      sprintf(buf,".vor.%d",it);
+      strcat(data,buf);
+    }
+    strcat(data,nsst->info.ver == 1 ? ".solb" : ".sol");
+  }
+  else {
+    ptr = strstr(data,".sol");
+    if ( ptr && it > 0 ) {
+      *ptr = '\0';
+      sprintf(buf,".vor.%d",it);
+      strcat(data,buf);
+    }
+    else if ( !ptr ) {
+      if ( it > 0 ) {
+        sprintf(buf,".vor.%d",it);
+        strcat(data,buf);
+      }
+      strcat(data,".vor.sol");
+    }
+  }
+
+  if ( !(outm = GmfOpenMesh(data,GmfWrite,nsst->info.ver,nsst->info.dim)) ) {
     fprintf(stderr," # unable to open vorticity file\n");
     return(0);
   }
@@ -321,21 +347,21 @@ int saveVor(NSst *nsst) {
 
   if ( nsst->info.ver == GmfFloat ) {
     for (k=0; k<nsst->info.np; k++) {
-      fbuf[0] = nsst->sol.un[k];
+      fbuf[0] = nsst->sol.w[k];
       GmfSetLin(outm,GmfSolAtVertices,fbuf);
     }
   }
   else {
     for (k=0; k<nsst->info.np; k++) {
-      dbuf[0] = nsst->sol.un[k];
+      dbuf[0] = nsst->sol.w[k];
       GmfSetLin(outm,GmfSolAtVertices,dbuf);
     }    
   }
   GmfCloseMesh(outm);
 
   /* release memory */
-	free(nsst->sol.un);
-	nsst->sol.un = NULL;
+  free(nsst->sol.w);
+  nsst->sol.w = NULL;
 
   return(1);
 }

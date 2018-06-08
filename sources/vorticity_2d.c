@@ -123,21 +123,21 @@ int vorticity_2d(NSst *nsst) {
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    Computing vorticity\n");
 
   /* allocating memory (for dylib) */
-  nsst->sol.un = (double*)calloc(nsst->info.np,sizeof(double));
-  assert(nsst->sol.un);  
+  nsst->sol.w = (double*)calloc(nsst->info.np,sizeof(double));
+  assert(nsst->sol.w);  
   Fv = (double*)calloc(nsst->info.np,sizeof(double));
   assert(Fv);
 
   ier = matAv_2d(nsst,&Av);
   if ( !ier ) {
-    free(nsst->sol.un);
+    free(nsst->sol.w);
     free(Fv);
     return(ier > 0);
   }
 
   ier = rhsFv_2d(nsst,Fv);
   if ( !ier ) {
-    free(nsst->sol.un);
+    free(nsst->sol.w);
     free(Fv);
     return(ier > 0);
   }
@@ -145,7 +145,7 @@ int vorticity_2d(NSst *nsst) {
   /* solve vorticity problem */
   res = nsst->sol.res;
   nit = nsst->sol.nit;
-  ier = csrPrecondGrad(&Av,nsst->sol.un,Fv,&res,&nit,0);
+  ier = csrPrecondGrad(&Av,nsst->sol.w,Fv,&res,&nit,0);
 
   free(Fv);
 

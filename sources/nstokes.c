@@ -558,12 +558,6 @@ int main(int argc,char **argv) {
   ier = saveSol(&nsst,0);
 	if ( !ier )   return(1);
 
-  /* compute vorticity */
-  if ( nsst.info.vort > 0 ) {
-    ier = NS_vorticity(&nsst);
-    if ( ier )  ier = saveVor(&nsst);
-  }
-
   chrono(OFF,&nsst.info.ctim[3]);
   if ( nsst.info.verb != '0' ) {
     printim(nsst.info.ctim[3].gdif,stim);
@@ -571,7 +565,7 @@ int main(int argc,char **argv) {
   }
 
   /* free mem */
-  if ( nsst.info.vort > 0 )  free(nsst.sol.un);
+  if ( nsst.info.vort > 0 )  free(nsst.sol.w);
 	free(nsst.sol.u);
   free(nsst.sol.p);
   free(nsst.sol.cl);

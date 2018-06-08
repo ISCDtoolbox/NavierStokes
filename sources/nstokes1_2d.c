@@ -735,6 +735,12 @@ int nstokes1_2d(NSst *nsst) {
         verb = nsst->info.verb;
         nsst->info.verb = '0';
         saveSol(nsst,jt);
+        /* compute vorticity */
+        if ( nsst->info.vort > 0 ) {
+          ier = NS_vorticity(nsst);
+          if ( ier > 0 )  ier = saveVor(nsst,jt);
+          if ( ier < 1 )  break;
+        }
         nsst->info.verb = verb;
         jt++;
       }
