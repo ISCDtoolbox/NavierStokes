@@ -173,7 +173,7 @@ static int parsar(int argc,char *argv[],NSst *nsst) {
           fprintf(stderr,"%s: missing argument option\n",argv[0]);
           usage(argv[0]);
         }
-          break;
+        break;
       case 's':
         if ( ++i < argc ) {
           nsst->sol.namein = argv[i];

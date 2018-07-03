@@ -60,7 +60,7 @@ int pack_3d(NSst *nsst) {
   nsst->info.np = nf;
 
   /* compress and renum tetrahedra */
-  prm = (int*)calloc(nsst->info.nei,sizeof(int));
+  prm = (int*)calloc(nsst->info.nei+1,sizeof(int));
   assert(prm);
   for (k=1; k<=nsst->info.nei; k++) {
     pe = &nsst->mesh.tetra[k];
@@ -237,7 +237,7 @@ int pack_2d(NSst *nsst) {
   nsst->info.np = nf;
 
   /* compress and renum triangles (!need to check with getMat) */
-  prm = (int*)calloc(nsst->info.nti,sizeof(int));
+  prm = (int*)calloc(nsst->info.nti+1,sizeof(int));
   assert(prm);
   for (k=1; k<=nsst->info.nti; k++) {
     pt = &nsst->mesh.tria[k];
