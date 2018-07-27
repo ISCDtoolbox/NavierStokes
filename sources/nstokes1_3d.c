@@ -85,7 +85,7 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
         csrSet(A,3*(k-1)+2,3*(k-1)+2,NS_TGV);
         nc++;
       }
-	  }
+    }
     if ( nsst->info.typ == P2 && nsst->info.np2 ) {
       for (k=nsst->info.np+1; k<=nsst->info.np2; k++) {
         ppt = &nsst->mesh.point[k];
@@ -106,7 +106,7 @@ static int setTGV_3d(NSst *nsst,pCsr A) {
     for (k=1; k<=nsst->info.na; k++) {
       pa = &nsst->mesh.edge[k];
       pcl = getCl(&nsst->sol,pa->ref,NS_edg,Dirichlet);
-	    if ( pcl ) {
+      if ( pcl ) {
         for (i=0; i<dof; i++) {
           csrSet(A,3*(pa->v[i]-1)+0,3*(pa->v[i]-1)+0,NS_TGV);
           csrSet(A,3*(pa->v[i]-1)+1,3*(pa->v[i]-1)+1,NS_TGV);
@@ -159,7 +159,7 @@ static int matAe_P1(double *a,double *b,double *c,double *d,double dt,double nu,
     m[i+3] = b[i] - d[i];
     m[i+6] = c[i] - d[i];
   }
-	if ( !invmatg(m,im) )  return(0);
+  if ( !invmatg(m,im) )  return(0);
     
   /* Ae: boucle sur les 5 points de quadrature */
   memset(Ae,0,30*30*sizeof(double));
@@ -195,9 +195,9 @@ static int matAe_P1(double *a,double *b,double *c,double *d,double dt,double nu,
       for (j=i; j<15; j++) {
         for (s=0; s<9; s++) {
           Ae[i][j] += w[p]*vol*nu * mm[s][i] * mm[s][j];
-				  if ( dt > 0 ) 
-						Ae[i][j] += (w[p]*vol*rho * ph[s][i]*ph[s][j]) / dt;
-			  }
+          if ( dt > 0 ) 
+            Ae[i][j] += (w[p]*vol*rho * ph[s][i]*ph[s][j]) / dt;
+        }
       }
     }
   }
@@ -228,11 +228,11 @@ static int matBe_P1(double *a,double *b,double *c,double *d,double Be[12][10]) {
     m[i+3] = b[i] - d[i];
     m[i+6] = c[i] - d[i];
   }
-	if ( !invmatg(m,im) )  return(0);
+  if ( !invmatg(m,im) )  return(0);
 
   memset(Be,0,12*10*sizeof(double));
   for (p=0; p<5; p++) {
-	  /* Dp for bubble */
+    /* Dp for bubble */
     Dp[0][4] = 256.0*q[p][1]*q[p][2]*(1-2*q[p][0]-q[p][1]-q[p][2]);
     Dp[1][4] = 256.0*q[p][0]*q[p][2]*(1-q[p][0]-2*q[p][1]-q[p][2]);
     Dp[2][4] = 256.0*q[p][1]*q[p][0]*(1-q[p][0]-q[p][1]-2*q[p][2]);
@@ -251,21 +251,21 @@ static int matBe_P1(double *a,double *b,double *c,double *d,double Be[12][10]) {
           mm[i][j]   += im[i*3+s] * Dp[s][j];
       }
     }
-	  /* Be = area*wp*tmm N mm */
-	  for (i=0; i<12; i++) {
-	    for (j=0; j<5; j++) {
-	      for (s=0; s<3; s++)
-	        Be[i][j] += w[p]*vol * ph[s][i] * mm[s][j];
-	    }
-	  }
+    /* Be = area*wp*tmm N mm */
+    for (i=0; i<12; i++) {
+      for (j=0; j<5; j++) {
+        for (s=0; s<3; s++)
+          Be[i][j] += w[p]*vol * ph[s][i] * mm[s][j];
+      }
+    }
   }
 
-	return(1);
+  return(1);
 }
 
 
 static int matAe_P2(double *a,double *b,double *c,double *d,double dt,double nu, double rho, double Ae[30][30]) {
-	double   m[9],im[9],mm[9][30],Dp[3][10],ph[9][30];
+  double   m[9],im[9],mm[9][30],Dp[3][10],ph[9][30];
   double   vol;
   char     i,j,p,s;
   static double w[5]    = { -4./5., 9./20., 9./20., 9./20.,  9./20. };
@@ -278,7 +278,7 @@ static int matAe_P2(double *a,double *b,double *c,double *d,double dt,double nu,
     m[i+3] = b[i] - d[i];
     m[i+6] = c[i] - d[i];
   }
-	if ( !invmatg(m,im) )  return(0);
+  if ( !invmatg(m,im) )  return(0);
 
   /* measure of K(a,b,c,d) */
   vol = volu_3d(a,b,c,d);
@@ -298,8 +298,8 @@ static int matAe_P2(double *a,double *b,double *c,double *d,double dt,double nu,
     Dp[0][7]=0;           Dp[0][8]=-4*q[p][1];                         Dp[0][9]=-4*q[p][2];
     Dp[1][7]=4*q[p][2];   Dp[1][8]=4*(1-q[p][0]-2*q[p][1]-q[p][2]);    Dp[1][9]=-4*q[p][2];
     Dp[2][7]=4*q[p][1];   Dp[2][8]=-4*q[p][1];                         Dp[2][9]=4*(1-q[p][0]-q[p][1]-2*q[p][2]);
-		
-		/* unsteady case */
+    
+    /* unsteady case */
     if ( dt > 0.0 ) {
       /* ph_basis function */
       memset(ph,0,9*30*sizeof(double));
@@ -330,7 +330,7 @@ static int matAe_P2(double *a,double *b,double *c,double *d,double dt,double nu,
         for (s=0; s<9; s++)
           Ae[i][j] += w[p]*vol * nu * mm[s][i] * mm[s][j];
           if ( dt > 0.0 ) 
-						Ae[i][j] += (w[p]*vol * rho * ph[s][i] * ph[s][j]) / dt;
+            Ae[i][j] += (w[p]*vol * rho * ph[s][i] * ph[s][j]) / dt;
       }
     }
   }
@@ -340,7 +340,7 @@ static int matAe_P2(double *a,double *b,double *c,double *d,double dt,double nu,
 
 
 static int matBe_P2(double *a,double *b,double *c,double *d,double Be[12][10]) {
-	double   m[9],im[9],mm[3][10],ph[3][12],Dp[3][10];
+  double   m[9],im[9],mm[3][10],ph[3][12],Dp[3][10];
   double   vol;
   char     i,j,p,s;
   static double w[5]    = { -4./5., 9./20., 9./20., 9./20.,  9./20. };
@@ -353,14 +353,14 @@ static int matBe_P2(double *a,double *b,double *c,double *d,double Be[12][10]) {
     m[i+3] = b[i] - d[i];
     m[i+6] = c[i] - d[i];
   }
-	if ( !invmatg(m,im) )  return(0);
+  if ( !invmatg(m,im) )  return(0);
 
   /* measure of K(a,b,c,d) */
   vol = volu_3d(a,b,c,d);
 
   memset(Be,0,12*10*sizeof(double));
   for (p=0; p<5; p++) {
-	  /* Dp for bubble */
+    /* Dp for bubble */
     Dp[0][0]=4*q[p][0]-1; Dp[0][1]=0;            Dp[0][2]=0;           Dp[0][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
     Dp[1][0]=0;           Dp[1][1]=4*q[p][1]-1;  Dp[1][2]=0;           Dp[1][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
     Dp[2][0]=0;           Dp[2][1]=0;            Dp[2][2]=4*q[p][2]-1; Dp[2][3]=4*(q[p][0]+q[p][1]+q[p][2])-3; 
@@ -372,7 +372,7 @@ static int matBe_P2(double *a,double *b,double *c,double *d,double Be[12][10]) {
     Dp[0][7]=0;           Dp[0][8]=-4*q[p][1];                         Dp[0][9]=-4*q[p][2];
     Dp[1][7]=4*q[p][2];   Dp[1][8]=4*(1-q[p][0]-2*q[p][1]-q[p][2]);    Dp[1][9]=-4*q[p][2];
     Dp[2][7]=4*q[p][1];   Dp[2][8]=-4*q[p][1];                         Dp[2][9]=4*(1-q[p][0]-q[p][1]-2*q[p][2]);
-		
+    
     /* ph_basis function */
     memset(ph,0,3*12*sizeof(double));
     ph[0][0] = ph[1][4] = ph[2][8] = -q[p][0];  
@@ -387,13 +387,13 @@ static int matBe_P2(double *a,double *b,double *c,double *d,double Be[12][10]) {
           mm[i][j]   += im[i*3+s] * Dp[s][j];
       }
     }
-	  /* Be = area*wp*tmm N mm */
-	  for (i=0; i<12; i++) {
-	    for (j=0; j<10; j++) {
-	      for (s=0; s<3; s++)
-	        Be[i][j] += w[p]*vol * ph[s][i] * mm[s][j];
-	    }
-	  }
+    /* Be = area*wp*tmm N mm */
+    for (i=0; i<12; i++) {
+      for (j=0; j<10; j++) {
+        for (s=0; s<3; s++)
+          Be[i][j] += w[p]*vol * ph[s][i] * mm[s][j];
+      }
+    }
   }
 
   return(1);
@@ -500,7 +500,7 @@ static int matAB_3d(NSst *nsst,pCsr A,pCsr B) {
       ier  = matAe_P2(a,b,c,d,nsst->sol.dt,nu,rho,Ae);
       ier += matBe_P2(a,b,c,d,Be);
     }
-		if ( ier < 2 )  continue;
+    if ( ier < 2 )  continue;
 
     /* put a(i,j) into global matrix */
     for (i=0; i<3*dof; i++) {
@@ -552,8 +552,9 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
   pEdge    pa;
   pPoint   ppt;
   pCl      pcl;
-  double  *vp,vol,len,n[3],w[3],*a,*b,*c,*d,kappa,nu,rho;
-  int      i,k,nc;
+  double  *vp,vol,len,n[3],w[3],*a,*b,*c,*d,gamma,kappa,nu,rho;
+  int      i,k,ier,nc;
+  char     okkap;
 
   if ( nsst->info.verb == '+' )  fprintf(stdout,"     gravity and body forces\n");
 
@@ -585,6 +586,40 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
 
   /* check for surface tension or atmosph. pressure */
   if ( (nsst->sol.cltyp & Tension) || (nsst->sol.cltyp & AtmPres) ) {
+    nc  = 0;
+    for (k=1; k<=nsst->info.np; k++) {
+      ppt = &nsst->mesh.point[k];
+      if ( ppt->tag & Corner )  continue;
+
+      /* surface tension */
+      okkap = 0;
+      ier   = 0;
+      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Tension);
+      if ( pcl ) {
+        gamma = pcl->u[0];
+        ier   = kappa_3d(&nsst->mesh,k,n,&len,&kappa);
+        okkap = 1;
+        if ( ier ) {
+          F[3*(k-1)+0] -= -gamma * kappa * n[0] * len/2.0;
+          F[3*(k-1)+1] -= -gamma * kappa * n[1] * len/2.0;
+          F[3*(k-1)+2] -= -gamma * kappa * n[2] * len/2.0;
+          nc++;
+        }
+      }
+
+      /* atmospheric pressure */
+      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,AtmPres);
+      if ( pcl ) {
+        if ( !okkap )  ier = kappa_3d(&nsst->mesh,k,n,&len,&kappa);
+        if ( ier ) {
+          F[3*(k-1)+0] -= -pcl->u[0] * n[0] * len/2.0;
+          F[3*(k-1)+1] -= -pcl->u[0] * n[0] * len/2.0;
+          F[3*(k-1)+2] -= -pcl->u[0] * n[0] * len/2.0;
+          nc++;
+        }
+      }
+    }
+    if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d values at interface\n",nc);
   }
   
   /* nodal boundary conditions */
@@ -595,12 +630,12 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
       
       /* Dirichlet conditions */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
-			if ( !pcl )  continue;
+      if ( !pcl )  continue;
       vp = pcl->att == 'f' ? &nsst->sol.u[3*(k-1)] : &pcl->u[0];
       F[3*(k-1)+0] = NS_TGV * vp[0];
       F[3*(k-1)+1] = NS_TGV * vp[1];
       F[3*(k-1)+2] = NS_TGV * vp[2];
-      
+
       /* slip conditions */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Slip);
       if ( pcl ) {
@@ -618,7 +653,7 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
       ptt = &nsst->mesh.tria[k];
       /* Dirichlet conditions */
       pcl = getCl(&nsst->sol,ptt->ref,NS_tri,Dirichlet);
-			if ( !pcl )  continue;
+      if ( !pcl )  continue;
       for (i=0; i<3; i++) {
         vp = pcl->att == 'f' ? &nsst->sol.u[3*(ptt->v[i]-1)] : &pcl->u[0];
         F[3*(ptt->v[i]-1)+0] = NS_TGV * vp[0];
@@ -667,7 +702,7 @@ static int rhsFu_3d(NSst *nsst,double *Fk) {
       /* bubble part */
       Fk[3*(pt->v[4]-1)+0] += d2*nsst->sol.u[3*(pt->v[4]-1)+0];
       Fk[3*(pt->v[4]-1)+1] += d2*nsst->sol.u[3*(pt->v[4]-1)+1];
-      Fk[3*(pt->v[4]-1)+2] += d2*nsst->sol.u[3*(pt->v[4]-1)+1];
+      Fk[3*(pt->v[4]-1)+2] += d2*nsst->sol.u[3*(pt->v[4]-1)+2];
     }
   }
 
@@ -681,18 +716,18 @@ int nstokes1_3d(NSst *nsst) {
   double  *F,*Fk,res;
   int      ier,it,jt,nit,sz;
   char     verb,stim[32];
-  
+
   /* -- Part I: matrix assembly */
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    Matrix and right-hand side assembly\n");
 
   /* counting P2 nodes (for dylib) */
-	if ( nsst->info.typ == P2 && !nsst->info.np2 ) {
-		nsst->info.np2 = hashel_3d(nsst);
-		if ( nsst->info.np2 == 0 ) {
-			fprintf(stdout," # error: no P2 node added.\n");
-			return(0);
-		}
-	}
+  if ( nsst->info.typ == P2 && !nsst->info.np2 ) {
+    nsst->info.np2 = hashel_3d(nsst);
+    if ( nsst->info.np2 == 0 ) {
+      fprintf(stdout," # error: no P2 node added.\n");
+      return(0);
+    }
+  }
 
   /* allocating memory (for dylib) */
   sz = (nsst->info.typ == P1) ? nsst->info.npi+nsst->info.nei : nsst->info.npi+nsst->info.np2;
@@ -700,7 +735,7 @@ int nstokes1_3d(NSst *nsst) {
   if ( !nsst->sol.u ) {
     nsst->sol.u = (double*)calloc(nsst->info.dim*sz,sizeof(double));
     assert(nsst->sol.u);
-	  nsst->sol.p = (double*)calloc(nsst->info.npi,sizeof(double));
+    nsst->sol.p = (double*)calloc(nsst->info.npi,sizeof(double));
     assert(nsst->sol.p);
   }
 
@@ -717,7 +752,7 @@ int nstokes1_3d(NSst *nsst) {
   /* steady-state */
   if ( nsst->sol.dt < 0.0 ) {
     if ( nsst->info.mfree ) {
-		  free(nsst->mesh.tetra);
+      free(nsst->mesh.tetra);
       if ( nsst->info.nt )  free(nsst->mesh.tria);
       if ( nsst->info.na )  free(nsst->mesh.edge);
       if ( !nsst->info.zip )  free(nsst->mesh.point);
@@ -727,8 +762,8 @@ int nstokes1_3d(NSst *nsst) {
   }
   /* unsteady problem */
   else {
-	  nsst->sol.un = (double*)calloc(nsst->info.dim*sz,sizeof(double));
-	  assert(nsst->sol.un);
+    nsst->sol.un = (double*)calloc(nsst->info.dim*sz,sizeof(double));
+    assert(nsst->sol.un);
     Fk = (double*)calloc(nsst->info.dim*sz,sizeof(double));
     assert(F);
     it = jt = 1;
@@ -775,8 +810,8 @@ int nstokes1_3d(NSst *nsst) {
 
     /* free mesh structure */
     if ( nsst->info.mfree ) {
-		  free(nsst->mesh.tetra);
-		  if ( nsst->info.nt )  free(nsst->mesh.tria);
+      free(nsst->mesh.tetra);
+      if ( nsst->info.nt )  free(nsst->mesh.tria);
       if ( nsst->info.na )  free(nsst->mesh.edge);
       if ( !nsst->info.zip )  free(nsst->mesh.point);
     }

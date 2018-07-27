@@ -277,7 +277,7 @@ int advect_P1_2d(NSst *nsst) {
     norm = sqrt(v[0]*v[0] + v[1]*v[1]);
     if ( norm < NS_EPSD )  continue;
     
-    pt = &nsst->mesh.tria[ppt->s];
+    pt = &nsst->mesh.tria[ppt->s2];
     for (i=0; i<3; i++)  if ( pt->v[i] == k )  break;
 
     /* barycentric coordinates of point p in triangle iel */
@@ -289,7 +289,7 @@ int advect_P1_2d(NSst *nsst) {
     c[1] = ppt->c[1];
     dte  = dt;
 
-    for (iel=ppt->s,j=0; j<ns; j++) {
+    for (iel=ppt->s2,j=0; j<ns; j++) {
       kp = iel;
       if ( nxtpt_2d(nsst,&iel,c,cb,st,v) < 1 )  break;
       dte -= st;

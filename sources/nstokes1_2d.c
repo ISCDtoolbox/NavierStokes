@@ -381,6 +381,7 @@ static int slipon_2d(NSst *nsst,pCsr A) {
     pa  = &nsst->mesh.edge[k];
     pcl = getCl(&nsst->sol,pa->ref,NS_edg,Slip);
     if ( !pcl )  continue;
+
     if ( pa->v[0] > nsst->info.np || pa->v[1] > nsst->info.np ) continue;
     iga = 2*(pa->v[0]-1);
     igb = 2*(pa->v[1]-1);
@@ -523,8 +524,9 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
   pEdge    pa;
   pPoint   ppt;
   pCl      pcl;
-  double  *vp,area,len,n[2],w[2],*a,*b,*c,kappa,nu,rho;
-  int      i,k,nc;
+  double  *vp,area,len,n[2],w[2],*a,*b,*c,gamma,kappa,nu,rho;
+  int      i,k,ier,nc;
+  char     okkap;
 
   if ( nsst->info.verb == '+' )  fprintf(stdout,"     gravity and body forces\n");
 
@@ -558,22 +560,33 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
       ppt = &nsst->mesh.point[k];
       if ( ppt->tag & Corner )  continue;
 
-      /* surface tension */
+      /* surface tension (check for sign) */
+      okkap = 0;
+      ier   = 0;
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Tension);
-      if ( !pcl )  continue;
-      kappa = kappa_2d(&nsst->mesh,k,n,&len);
-      F[2*(k-1)+0] -= -0.5 * pcl->u[0] * len * kappa * n[0];
-      F[2*(k-1)+1] -= -0.5 * pcl->u[0] * len * kappa * n[1];
-      nc++;
+      if ( pcl ) {
+        gamma = pcl->u[0];
+        ier   = kappa_2d(&nsst->mesh,k,n,&len,&kappa);
+        okkap = 1;
+        if ( ier ) {
+          F[2*(k-1)+0] += gamma * kappa * n[0] * len/2.0;
+          F[2*(k-1)+1] += gamma * kappa * n[1] * len/2.0;
+          nc++;
+        }
+      }
 
       /* atmospheric pressure */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,AtmPres);
-      if ( !pcl )  continue;
-      F[2*(k-1)+0] -= -0.5 * len * pcl->u[0] * n[0];
-      F[2*(k-1)+1] -= -0.5 * len * pcl->u[1] * n[1];
-      nc++;
+      if ( pcl ) {
+        if ( !okkap )  ier = kappa_2d(&nsst->mesh,k,n,&len,&kappa);
+        if ( ier ) {
+          F[2*(k-1)+0] += pcl->u[0] * n[0] * len/2.0;
+          F[2*(k-1)+1] += pcl->u[1] * n[1] * len/2.0;
+          nc++;
+        }
+      }
     }
-    if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d values (tension|atmPres)\n",nc);
+    if ( nsst->info.verb == '+' && nc > 0 )  fprintf(stdout,"     %d values at interface\n",nc);
   }
 
   /* nodal boundary conditions */
@@ -584,16 +597,10 @@ static int rhsF_P1_2d(NSst *nsst,double *F) {
 
       /* Dirichlet conditions */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Dirichlet);
-			if ( !pcl )  continue;
-      vp = pcl->att == 'f' ? &nsst->sol.u[2*(k-1)] : &pcl->u[0];
-      F[2*(k-1)+0] = NS_TGV * vp[0];
-      F[2*(k-1)+1] = NS_TGV * vp[1];
-      
-      /* slip conditions */
-      pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Slip);
-      if ( pcl ) {
-        fprintf(stdout," # NOT IMPLEMENTED\n");
-        exit(1);
+			if ( pcl ) {
+        vp = pcl->att == 'f' ? &nsst->sol.u[2*(k-1)] : &pcl->u[0];
+        F[2*(k-1)+0] = NS_TGV * vp[0];
+        F[2*(k-1)+1] = NS_TGV * vp[1];
       }
       nc++;
     }

@@ -14,7 +14,7 @@
 #include "chrono.h"
 #include "ns_calls.h"
 
-#define NS_VER   "5.2a"
+#define NS_VER   "5.2c"
 #define NS_REL   "Jan. 29, 2016"
 #define NS_CPY   "(C) Copyright 2006- , ISCD-SU"
 
@@ -38,7 +38,7 @@
 /* data structures */
 typedef struct {
   double  c[3];         /* coordinates */
-  int     ref,s,new;    /* label and seed for simplex, new:perm */
+  int     ref,s2,s3,new;    /* label and seed for simplex, new:perm */
   char    tag;
 } Point;
 typedef Point * pPoint;
@@ -127,7 +127,8 @@ int  nstokes1_3d(NSst *nsst);
 int  vorticity_2d(NSst *nsst);
 int  vorticity_3d(NSst *nsst);
 
-double kappa_2d(pMesh mesh,int ip,double *n,double *len);
+int kappa_2d(pMesh mesh,int ip,double *n,double *len,double *kappa);
+int kappa_3d(pMesh mesh,int ip,double *n,double *len,double *kappa);
 
 
 #endif

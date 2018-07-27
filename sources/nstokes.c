@@ -1,6 +1,6 @@
 /*
  * main program file for nstokes
- * (C) Copyright 2006 - 2015, ICS-SU
+ * (C) Copyright 2006-, ISCD-SU
  *
  * This file is part of nstokes.
  *
@@ -15,7 +15,7 @@
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with SUstokes.  If not, see <http://www.gnu.org/licenses/>.
+ * along with nstokes.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "nstokes.h"
@@ -288,7 +288,7 @@ static int parsop(NSst *nsst) {
 
   /* read flow parameters */
   nsst->sol.nbcl = 0;
-	npar = 0;
+  npar = 0;
   while ( !feof(in) ) {
     /* scan line */
     ret = fscanf(in,"%s",data);
@@ -322,7 +322,7 @@ static int parsop(NSst *nsst) {
     /* load forces */
     else if ( !strcmp(data,"neumann") ) {
       fscanf(in,"%d",&ncld);
-			npar++;
+      npar++;
       for (i=nsst->sol.nbcl; i<nsst->sol.nbcl+ncld; i++) {
         pcl = &nsst->sol.cl[i];
         pcl->typ = Neumann;
@@ -354,7 +354,7 @@ static int parsop(NSst *nsst) {
     /* slip condition: normal component vanishes */
     else if ( !strcmp(data,"slip") ) {
       npar++;
-			fscanf(in,"%d",&ncld);
+      fscanf(in,"%d",&ncld);
       for (i=nsst->sol.nbcl; i<nsst->sol.nbcl+ncld; i++) {
         pcl = &nsst->sol.cl[i];
         pcl->typ = Slip;
@@ -370,14 +370,26 @@ static int parsop(NSst *nsst) {
     /* surface tension: ref+gamma; atmosph.pressure (only on vertices) */
     else if ( !strcmp(data,"tension") || !strcmp(data,"atmpres") ) {
       npar++;
-			fscanf(in,"%d",&ncld);
+      fscanf(in,"%d",&ncld);
       for (i=nsst->sol.nbcl; i<nsst->sol.nbcl+ncld; i++) {
         pcl = &nsst->sol.cl[i];
         pcl->typ = !strcmp(data,"tension") ? Tension : AtmPres;
         pcl->elt = NS_ver;
-        fscanf(in,"%d %lf",&pcl->ref,&pcl->u[0]);
+
+        /* read vector for atmospheric pressure */
+        if ( pcl->typ == AtmPres ) {
+          if ( nsst->info.dim == 2 )
+            fscanf(in,"%d %lf %lf",&pcl->ref,&pcl->u[0],&pcl->u[1]);
+          else
+            fscanf(in,"%d %lf %lf %lf",&pcl->ref,&pcl->u[0],&pcl->u[1],&pcl->u[2]);
+        }
+        else
+          fscanf(in,"%d %lf",&pcl->ref,&pcl->u[0]);
       }
-      nsst->sol.nbcl += ncld;
+      if ( (nsst->info.dim == 2 && !nsst->info.nai) || (nsst->info.dim == 3 && !nsst->info.nti) )
+        fprintf(stderr," ## no interface element found, discarding boundary conditions.\n");
+      else
+        nsst->sol.nbcl += ncld;
     }
     /* gravity or body force */
     else if ( !strcmp(data,"gravity") ) {
@@ -388,7 +400,7 @@ static int parsop(NSst *nsst) {
     }
     /* flow coefficients */
     else if ( !strcmp(data,"domain") ) {
-			npar++;
+      npar++;
       fscanf(in,"%d",&ncld);
       assert(ncld <= NS_MAT);
       nsst->sol.nmat = ncld;
@@ -402,7 +414,7 @@ static int parsop(NSst *nsst) {
   
   for (i=0; i<nsst->sol.nbcl; i++) {
     pcl = &nsst->sol.cl[i];
-		nsst->sol.cltyp |= pcl->typ;
+    nsst->sol.cltyp |= pcl->typ;
     nsst->sol.clelt |= pcl->elt;
   }
 
@@ -422,7 +434,7 @@ static int parsdt(NSst *nsst) {
   if ( !in )  return(1);
   fscanf(in,"%lf",&dt);
   fclose(in);
- 
+
   /* check value */
   if ( nsst->sol.dt > 0.0 )
     nsst->sol.dt = NS_MIN(nsst->sol.dt,dt);
@@ -433,7 +445,7 @@ static int parsdt(NSst *nsst) {
 
 int main(int argc,char **argv) {
   NSst     nsst;
-  int      ier,nel;
+  int      ier,nel,nh;
   char     stim[32];
 
   memset(&nsst,0,sizeof(NSst));
@@ -459,12 +471,12 @@ int main(int argc,char **argv) {
   nsst.sol.mt    = -1.0;     /* max time      */
   nsst.sol.nt    = 0;        /* steady-state  */
   nsst.sol.ts    = 0;        /* no saving */
-  nsst.sol.res   = NS_RES;
-  nsst.sol.nit   = NS_MAXIT;
+  nsst.sol.res   = NS_RES;   /* default residual 1e-6 */
+  nsst.sol.nit   = NS_MAXIT; /* default max number of iterations */
 
   /* global parameters */
-	nsst.info.dim    = 3;
-	nsst.info.ver    = 1;	
+  nsst.info.dim    = 3;
+  nsst.info.ver    = 1;  
   nsst.info.verb   = '1';
   nsst.info.zip    = 0;
   nsst.info.typ    = P1;    /* mini element */
@@ -475,7 +487,7 @@ int main(int argc,char **argv) {
   if ( !parsar(argc,argv,&nsst) )  return(1);
 
   /* loading data */
-	chrono(ON,&nsst.info.ctim[1]);
+  chrono(ON,&nsst.info.ctim[1]);
 
   if ( nsst.info.verb != '0' ) {
     fprintf(stdout," - NSTOKES, Release %s, %s\n   %s\n\n",NS_VER,NS_REL,NS_CPY);
@@ -483,8 +495,8 @@ int main(int argc,char **argv) {
   }
 
   /* loading mesh */
-	ier = loadMesh(&nsst);
-	if ( ier <= 0 )  return(1);
+  ier = loadMesh(&nsst);
+  if ( ier <= 0 )  return(1);
   nel = nsst.info.dim == 2 ? nsst.info.nt : nsst.info.ne;
 
   /* parse parameters in file */
@@ -495,9 +507,9 @@ int main(int argc,char **argv) {
   if ( !nsst.sol.u ) {
     if ( nsst.info.typ == P1 )
       nsst.sol.u = (double*)calloc(nsst.info.dim*(nsst.info.np+nel),sizeof(double));
-	  else {
-	    nsst.info.np2 = 3*nsst.info.np;   /* for now an upper bound */
-		  nsst.sol.u = (double*)calloc(nsst.info.dim * (nsst.info.np+nsst.info.np2),sizeof(double));
+    else {
+      nsst.info.np2 = 3*nsst.info.np;   /* for now an upper bound */
+      nsst.sol.u = (double*)calloc(nsst.info.dim * (nsst.info.np+nsst.info.np2),sizeof(double));
     }
     assert(nsst.sol.u);
     nsst.sol.p = (double*)calloc(nsst.info.np,sizeof(double));
@@ -513,21 +525,36 @@ int main(int argc,char **argv) {
   /* packing mesh if needed */
   if ( nsst.sol.nmat ) {
     ier = nsst.info.dim == 2 ? pack_2d(&nsst) : pack_3d(&nsst);
-		if ( ier == 0 ) {
-			if ( nsst.info.verb != '0' )  fprintf(stdout," # Packing error.\n");
-		  return(1);
-		}
-	}
+    if ( ier == 0 ) {
+      if ( nsst.info.verb != '0' )  fprintf(stdout," # Packing error.\n");
+      return(1);
+    }
+  }
 
-  /* setting adjacency */
-  if ( (nsst.sol.sim == Navier) || (nsst.sol.cltyp & Tension) )    
-	  nsst.info.dim == 2 ? hashel_2d(&nsst) : hashel_3d(&nsst);
+  /* setting adjacency (needed for surface tension or free surface flow)*/
+  if ( (nsst.sol.sim == Navier) || (nsst.sol.cltyp & Tension) || (nsst.sol.cltyp & AtmPres) ) {
+    if ( nsst.info.verb == '+' )  fprintf(stdout,"    Adjacency table: ");
+    if ( nsst.info.dim == 2 )
+      nh = hashel_2d(&nsst);
+    else {
+      nh  = hashel_3d(&nsst);
+      /* hash triangles (needed for free-surface and bi-fluids) */
+      if ( (nsst.sol.cltyp & Tension) || (nsst.sol.cltyp & AtmPres) )
+        nh += hashel_2d(&nsst);
+    }
+    if ( nsst.info.verb == '+' )  fprintf(stdout," %d updated\n",nh);
+  }
 
   /* counting P1b|P2 nodes */
-  nsst.info.dim == 2 ? addnod_2d(&nsst) : addnod_3d(&nsst);
+  if ( nsst.info.verb == '+' )  fprintf(stdout,"    Adding nodes: ");
+  if ( nsst.info.dim == 2 )
+    nh = addnod_2d(&nsst);
+  else
+    nh = addnod_3d(&nsst);
+  if ( nsst.info.verb == '+' )  fprintf(stdout," %d\n",nh);
 
-	chrono(OFF,&nsst.info.ctim[1]);
-	printim(nsst.info.ctim[1].gdif,stim);
+  chrono(OFF,&nsst.info.ctim[1]);
+  printim(nsst.info.ctim[1].gdif,stim);
   if ( nsst.info.verb != '0' )  fprintf(stdout," - COMPLETED: %s\n",stim);
 
   if ( !nsst.sol.nameout ) {
@@ -540,15 +567,15 @@ int main(int argc,char **argv) {
   chrono(ON,&nsst.info.ctim[2]);
   if ( nsst.info.verb != '0' )
     fprintf(stdout,"\n ** MODULE NSTOKES: %s (%s)\n",NS_VER,nsst.sol.sim == Navier ? "Navier-Stokes" : "Stokes");
-	ier = NS_nstokes(&nsst);
+  ier = NS_nstokes(&nsst);
   chrono(OFF,&nsst.info.ctim[2]);
   if ( nsst.info.verb != '0' ) {
-		printim(nsst.info.ctim[2].gdif,stim);
+    printim(nsst.info.ctim[2].gdif,stim);
     if ( ier )
       fprintf(stdout," ** COMPLETED: %s\n\n",stim);
     else
       fprintf(stdout," ** NOT COMPLETED!: %s\n\n",stim);
-	}
+  }
 
   /* save file */
   if ( nsst.info.verb != '0' )  fprintf(stdout," - WRITING DATA\n");
@@ -556,7 +583,7 @@ int main(int argc,char **argv) {
   if ( nsst.info.zip && !unpack(&nsst) )  return(1);
 
   ier = saveSol(&nsst,0);
-	if ( !ier )   return(1);
+  if ( !ier )   return(1);
 
   chrono(OFF,&nsst.info.ctim[3]);
   if ( nsst.info.verb != '0' ) {
@@ -566,14 +593,14 @@ int main(int argc,char **argv) {
 
   /* free mem */
   if ( nsst.info.vort > 0 )  free(nsst.sol.w);
-	free(nsst.sol.u);
+  free(nsst.sol.u);
   free(nsst.sol.p);
   free(nsst.sol.cl);
   free(nsst.sol.mat);
 
   chrono(OFF,&nsst.info.ctim[0]);
   if ( nsst.info.verb != '0' ) {
-	  printim(nsst.info.ctim[0].gdif,stim);
+    printim(nsst.info.ctim[0].gdif,stim);
     fprintf(stdout,"\n ** Cumulative time: %s.\n",stim);
   }
 

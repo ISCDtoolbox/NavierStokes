@@ -28,7 +28,7 @@ int pack_3d(NSst *nsst) {
   }
   nsst->info.zip = 1;
 
-  /* compress and renum vertices */
+  /* compress and realloc vertices+solution/data */
   nf = nsst->info.npi;
   k  = 1;
   while ( k <= nf ) {
@@ -103,7 +103,7 @@ int pack_3d(NSst *nsst) {
   /* update simplices */
   for (k=1; k<=nsst->info.npi; k++) {
     ppt = &nsst->mesh.point[k];
-    if ( ppt->s > 0 )  ppt->s = prm[ppt->s];
+    if ( ppt->s3 > 0 )  ppt->s3 = prm[ppt->s3];
   }
   free(prm);
 
@@ -280,7 +280,7 @@ int pack_2d(NSst *nsst) {
   /* update simplices */
   for (k=1; k<=nsst->info.npi; k++) {
     ppt = &nsst->mesh.point[k];
-    if ( ppt->s > 0 )  ppt->s = prm[ppt->s];
+    if ( ppt->s2 > 0 )  ppt->s2 = prm[ppt->s2];
   }
   free(prm);
 
