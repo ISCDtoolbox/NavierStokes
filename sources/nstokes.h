@@ -83,7 +83,7 @@ typedef struct {
 typedef Cl * pCl;
 
 typedef struct {
-  double  nu,rho;
+  double  nu,rho,mass;
   int     ref;
 } Mat;
 typedef Mat * pMat;

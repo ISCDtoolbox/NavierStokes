@@ -3,8 +3,14 @@
 #include "libmesh5.h"
 
 
+static inline double mass_2d(double *a,double *b,double *c) {
+  return( ((b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])) / 2.0 );
+}
+
+
 /* read mesh */
 int loadMesh(NSst *nsst) {
+  pMat       pm;
   pPoint     ppt;
   pEdge      pa;
   pTria      pt1;
@@ -103,6 +109,7 @@ int loadMesh(NSst *nsst) {
       GmfGetLin(inm,GmfEdges,&pa->v[0],&pa->v[1],&pa->ref);
     }
   }
+  
   /* read mesh triangles */
   if ( nsst->info.nt > 0 ) {
     nsst->mesh.tria  = (pTria)calloc(nsst->info.nt+1,sizeof(Tria));
@@ -111,6 +118,19 @@ int loadMesh(NSst *nsst) {
     for (k=1; k<=nsst->info.nt; k++) {
       pt1 = &nsst->mesh.tria[k];
       GmfGetLin(inm,GmfTriangles,&pt1->v[0],&pt1->v[1],&pt1->v[2],&pt1->ref);
+      /* compute initial mass */
+      if ( nsst->info.dim == 2 && nsst->sol.nmat ) {
+        a = &nsst->mesh.point[pt1->v[0]].c[0];
+        b = &nsst->mesh.point[pt1->v[1]].c[0];
+        c = &nsst->mesh.point[pt1->v[2]].c[0];
+        for (i=0; i<nsst->sol.nmat; i++) {
+          pm = &nsst->sol.mat[i];
+          if ( pm->ref == pt1->ref ) {
+            pm->mass += mass_2d(a,b,c);
+            break;
+          }
+        }
+      }
     }
   }
   /* read mesh tetrahedra */
@@ -131,6 +151,14 @@ int loadMesh(NSst *nsst) {
     if ( nsst->info.nt )  fprintf(stdout,", %d triangles",nsst->info.nti);
     if ( nsst->info.ne )  fprintf(stdout,", %d tetrahedra",nsst->info.nei);
     fprintf(stdout,"\n");
+    if ( nsst->sol.nmat > 0 ) {
+      printf("    mass: ");
+      for (i=0; i<nsst->sol.nmat; i++) {
+        pm = &nsst->sol.mat[i];
+        printf("%g, ",pm->mass);
+      }
+      fprintf(stdout,"\n");
+    }
   }
 
   return(1);
