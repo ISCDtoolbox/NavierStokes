@@ -523,7 +523,7 @@ int main(int argc,char **argv) {
   }
 
   /* packing mesh if needed */
-  if ( nsst.sol.nmat ) {
+  if ( nsst.sol.nmat > 0 ) {
     ier = nsst.info.dim == 2 ? pack_2d(&nsst) : pack_3d(&nsst);
     if ( ier == 0 ) {
       if ( nsst.info.verb != '0' )  fprintf(stdout," # Packing error.\n");

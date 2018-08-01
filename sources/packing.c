@@ -1,6 +1,11 @@
 #include "nstokes.h"
 
 
+static inline double mass_2d(double *a,double *b,double *c) {
+  return( ((b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])) / 2.0 );
+}
+
+
 /* compactify mesh structure */
 int pack_3d(NSst *nsst) {
   pTetra    pe;
@@ -184,17 +189,39 @@ int pack_2d(NSst *nsst) {
   pTria     pt;
   pEdge     pa;
   pPoint    ppt;
-  double    nu,rho,w[2];
+  pMat      pm;
+  double   *a,*b,*c,mass,nu,rho,w[2];
   int      *prm,i,k,nf,id;
 
   /* check if compression needed */
   nf = 0;
   for (k=1; k<=nsst->info.nti; k++) {
     pt = &nsst->mesh.tria[k];
-    if ( getMat(&nsst->sol,pt->ref,&nu,&rho) ) {
-      nf++;
-      for (i=0; i<3; i++)  nsst->mesh.point[pt->v[i]].new = pt->v[i];
+    a  = &nsst->mesh.point[pt->v[0]].c[0];
+    b  = &nsst->mesh.point[pt->v[1]].c[0];
+    c  = &nsst->mesh.point[pt->v[2]].c[0];
+
+    /* compute mass */
+    for (i=0; i<nsst->sol.nmat; i++) {
+      pm = &nsst->sol.mat[i];
+      if ( pm->ref == pt->ref ) {
+        pm->mass += mass_2d(a,b,c);
+        nf++;
+        /* for renumbering purposes */
+        for (i=0; i<3; i++)  nsst->mesh.point[pt->v[i]].new = pt->v[i];
+        break;
+      }
     }
+  }
+  if ( nsst->info.verb != '0' ) {
+    fprintf(stdout,"    mass: ");
+    mass = 0.0;
+    for (i=0; i<nsst->sol.nmat; i++) {
+      pm = &nsst->sol.mat[i];
+      fprintf(stdout," %g [%d], ",pm->mass,pm->ref);
+      mass += pm->mass;
+    }
+    fprintf(stdout,"  total: %g\n",mass);
   }
   if ( nf == nsst->info.nti )  return(-1);
 
