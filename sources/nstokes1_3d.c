@@ -552,8 +552,8 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
   pEdge    pa;
   pPoint   ppt;
   pCl      pcl;
-  double  *vp,vol,len,n[3],w[3],*a,*b,*c,*d,gamma,kappa,nu,rho;
-  int      i,k,ier,nc;
+  double  *vp,vol,n[3],w[3],*a,*b,*c,*d,gamma,meas,kappa,nu,rho;
+  int      i,k,ier,nc,nl;
   char     okkap;
 
   if ( nsst->info.verb == '+' )  fprintf(stdout,"     gravity and body forces\n");
@@ -597,12 +597,12 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,Tension);
       if ( pcl ) {
         gamma = pcl->u[0];
-        ier   = kappa_3d(&nsst->mesh,k,n,&len,&kappa);
+        ier   = kappa_3d(&nsst->mesh,k,n,&meas,&kappa,&nl);
         okkap = 1;
         if ( ier ) {
-          F[3*(k-1)+0] -= -gamma * kappa * n[0] * len/2.0;
-          F[3*(k-1)+1] -= -gamma * kappa * n[1] * len/2.0;
-          F[3*(k-1)+2] -= -gamma * kappa * n[2] * len/2.0;
+          F[3*(k-1)+0] -= -gamma * kappa * n[0] * meas/nl;
+          F[3*(k-1)+1] -= -gamma * kappa * n[1] * meas/nl;
+          F[3*(k-1)+2] -= -gamma * kappa * n[2] * meas/nl;
           nc++;
         }
       }
@@ -610,11 +610,11 @@ static int rhsF_P1_3d(NSst *nsst,double *F) {
       /* atmospheric pressure */
       pcl = getCl(&nsst->sol,ppt->ref,NS_ver,AtmPres);
       if ( pcl ) {
-        if ( !okkap )  ier = kappa_3d(&nsst->mesh,k,n,&len,&kappa);
+        if ( !okkap )  ier = kappa_3d(&nsst->mesh,k,n,&meas,&kappa,&nl);
         if ( ier ) {
-          F[3*(k-1)+0] -= -pcl->u[0] * n[0] * len/2.0;
-          F[3*(k-1)+1] -= -pcl->u[0] * n[0] * len/2.0;
-          F[3*(k-1)+2] -= -pcl->u[0] * n[0] * len/2.0;
+          F[3*(k-1)+0] -= -pcl->u[0] * n[0] * meas/nl;
+          F[3*(k-1)+1] -= -pcl->u[1] * n[1] * meas/nl;
+          F[3*(k-1)+2] -= -pcl->u[2] * n[2] * meas/nl;
           nc++;
         }
       }

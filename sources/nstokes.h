@@ -126,9 +126,8 @@ int  nstokes1_2d(NSst *nsst);
 int  nstokes1_3d(NSst *nsst);
 int  vorticity_2d(NSst *nsst);
 int  vorticity_3d(NSst *nsst);
-
-int kappa_2d(pMesh mesh,int ip,double *n,double *len,double *kappa);
-int kappa_3d(pMesh mesh,int ip,double *n,double *len,double *kappa);
+int  kappa_2d(pMesh mesh,int ip,double *n,double *meas,double *kappa);
+int  kappa_3d(pMesh mesh,int ip,double *n,double *meas,double *kappa,int *nl);
 
 
 #endif
