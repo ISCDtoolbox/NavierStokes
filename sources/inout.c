@@ -141,8 +141,8 @@ int loadMesh(NSst *nsst) {
 
 /* load initial solution */
 int loadSol(NSst *nsst) {
+  double      bufd[GmfMaxTyp],pmin,pmax,ddp;
   float       fp,buf[GmfMaxTyp];
-  double      bufd[GmfMaxTyp];
   int         i,k,dim,ver,np,type,inm,typtab[GmfMaxTyp],offset;
   char       *ptr,data[128];
 
@@ -178,6 +178,8 @@ int loadSol(NSst *nsst) {
   if ( nsst->info.verb != '0' )  fprintf(stdout,"    %s :",data);
 
   /* read mesh solutions u_1,..,u_d,p */
+  pmin =  DBL_MAX;
+  pmax = -DBL_MAX;
   GmfGotoKwd(inm,GmfSolAtVertices);
   if ( ver == GmfFloat ) {
     for (k=0; k<nsst->info.np; k++) {
@@ -185,6 +187,8 @@ int loadSol(NSst *nsst) {
       for (i=0; i<nsst->info.dim; i++)
         nsst->sol.u[nsst->info.dim*k+i] = buf[i];
       nsst->sol.p[k] = buf[i];
+      if ( nsst->sol.p[k] < pmin )  pmin = nsst->sol.p[k];
+      else if ( nsst->sol.p[k] > pmax )  pmax = nsst->sol.p[k];
     }
   }
   else {
@@ -193,8 +197,15 @@ int loadSol(NSst *nsst) {
       for (i=0; i<nsst->info.dim; i++)
         nsst->sol.u[nsst->info.dim*k+i] = bufd[i];
       nsst->sol.p[k] = bufd[i];
+      if ( nsst->sol.p[k] < pmin )  pmin = nsst->sol.p[k];
+      else if ( nsst->sol.p[k] > pmax )  pmax = nsst->sol.p[k];
     }
   }
+  /* rescale pressure field */
+  ddp = fabs(pmax - pmin);
+  for (k=0; k<nsst->info.np; k++)
+    nsst->sol.p[k] /= ddp;
+
   if ( GmfStatKwd(inm,GmfIterations) ) {
     GmfGotoKwd(inm,GmfIterations);
     GmfGetLin(inm,GmfTime,&np);
@@ -222,7 +233,7 @@ int loadSol(NSst *nsst) {
 
 /* save solution */
 int saveSol(NSst *nsst,int it) {
-  double       dbuf[GmfMaxTyp];
+  double       dbuf[GmfMaxTyp],pmin,pmax,ddp;
   float        fbuf[GmfMaxTyp],tmpf;
   int          i,k,outm,type,typtab[GmfMaxTyp];
   char        *ptr,data[128],buf[64];
@@ -262,13 +273,22 @@ int saveSol(NSst *nsst,int it) {
   typtab[0] = GmfVec;
   typtab[1] = GmfSca;
 
+  /* rescale pressure field */
+  pmin =  DBL_MAX;
+  pmax = -DBL_MAX;
+  for (k=0; k<nsst->info.np+nsst->info.np2; k++) {
+    if ( nsst->sol.p[k] < pmin )  pmin = nsst->sol.p[k];
+    else if ( nsst->sol.p[k] > pmax )  pmax = nsst->sol.p[k];
+  }
+  ddp = fabs(pmax - pmin);
+
   /* write P1 sol */
   GmfSetKwd(outm,GmfSolAtVertices,nsst->info.np+nsst->info.np2,type,typtab);
   if ( nsst->info.ver == GmfFloat ) {
     for (k=0; k<nsst->info.np+nsst->info.np2; k++) {
       for (i=0; i<nsst->info.dim; i++)      
         fbuf[i] = nsst->sol.u[nsst->info.dim*k+i];
-      fbuf[i] = nsst->sol.p[k];
+      fbuf[i] = nsst->sol.p[k] / ddp;
       GmfSetLin(outm,GmfSolAtVertices,fbuf);
     }
   }
@@ -276,7 +296,7 @@ int saveSol(NSst *nsst,int it) {
     for (k=0; k<nsst->info.np+nsst->info.np2; k++) {
       for (i=0; i<nsst->info.dim; i++)      
         dbuf[i] = nsst->sol.u[nsst->info.dim*k+i];
-      dbuf[i] = nsst->sol.p[k];
+      dbuf[i] = nsst->sol.p[k] / ddp;
       GmfSetLin(outm,GmfSolAtVertices,dbuf);
     }
   }

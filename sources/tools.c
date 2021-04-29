@@ -40,21 +40,18 @@ int getMat(pSol sol,int ref,double *nu,double *rho) {
 /* solve 3x3 definite symmetric positive */
 static int sol3x3(double ma[6],double mb[3],double mx[3]) {
   double  aa,bb,cc,dd,ee,ff,det;
-  double  vmin,vmax,maxx;
+  double  vmin,vmax;
   int     k;
 
   /* check ill-conditionned matrix */
   vmin = vmax = fabs(ma[0]);
   for (k=1; k<6; k++) {
-    maxx = fabs(ma[k]);
-    if ( maxx < vmin )  vmin = maxx;
-    if ( maxx > vmax )  vmax = maxx;
+    dd = fabs(ma[k]);
+    if ( dd < vmin )  vmin = dd;
+    else if ( dd > vmax )  vmax = dd;
   }
   if ( vmax < NS_EPSD )  return(0);
   else if ( vmin > NS_EPS2 && vmin < vmax*NS_EPS2 )  return(0);
-
-  /* theory says: epsr = EPS2 * vmax;  */
-  /* epsr = vmin == 0.0 ? EPS2 * vmax : vmax / vmin * EPS2; */
 
   /* compute sub-dets */
   aa = ma[3]*ma[5] - ma[4]*ma[4];

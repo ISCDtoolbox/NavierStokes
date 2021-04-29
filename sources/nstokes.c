@@ -448,10 +448,6 @@ int main(int argc,char **argv) {
   int      ier,nel,nh;
   char     stim[32];
 
-  memset(&nsst,0,sizeof(NSst));
-  tminit(nsst.info.ctim,TIMEMAX);
-  chrono(ON,&nsst.info.ctim[0]);
-
   /* trap exceptions */
   signal(SIGABRT,excfun);
   signal(SIGFPE,excfun);
@@ -462,6 +458,11 @@ int main(int argc,char **argv) {
   signal(SIGBUS,excfun);
 
   /* init structure */
+  memset(&nsst,0,sizeof(NSst));
+  memset(&nsst.info,0,sizeof(Info));
+  tminit(nsst.info.ctim,TIMEMAX);
+  chrono(ON,&nsst.info.ctim[0]);
+
   memset(&nsst.mesh,0,sizeof(Mesh));
   memset(&nsst.sol,0,sizeof(Sol));
   nsst.sol.cl  = (Cl*)calloc(NS_CL,sizeof(Cl));

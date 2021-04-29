@@ -304,11 +304,11 @@ static int matPNe_P1(double *a,double *b,double PNe[4][4]) {
   static double w[2] ={1./3., 1./6.};
 
   /* lenght(a,b) */
-  dx  = b[0]-a[0];
-  dy  = b[1]-a[1];
+  dx  = b[0] - a[0];
+  dy  = b[1] - a[1];
   d   = sqrt(dx*dx+dy*dy);
-  eps = 1.0 / NS_EPS;
-  /* normal to the edge a,b oriented according to the vector ab */
+  eps = 1.0 / NS_EPS2;
+  /* normal: orthogonal to the edge a,b oriented according to the vector ab */
   n[0] = -dy / d;
   n[1] =  dx / d;
 
@@ -341,12 +341,13 @@ static int matPFe_P1(double *a,double *b,double PFe[4][4]) {
   char          i;
 
   /* Distance between a and b */
-  dx = b[0]-a[0];
-  dy = b[1]-a[1];
+  dx = b[0] - a[0];
+  dy = b[1] - a[1];
   d  = sqrt(dx*dx+dy*dy);
   /* Tangent to the edge a, b oriented according to the vector ab */
-  t[0] = dx/d;
-  t[1] = dy/d;
+  t[0] = dx / d;
+  t[1] = dy / d;
+
   for (i=0; i<4; i++)
     PFe[i][3-i]= d*w[1]*t[0]*t[1];
   PFe[0][1]= d*w[0]*t[0]*t[1];
@@ -355,10 +356,10 @@ static int matPFe_P1(double *a,double *b,double PFe[4][4]) {
   for (i=0; i<2; i++)
     PFe[i][i]= d*w[0]*t[i]*t[i];
   for (i=2; i<4; i++)
-      PFe[i][i]= d*w[0]*t[i-2]*t[i-2];
+    PFe[i][i]= d*w[0]*t[i-2]*t[i-2];
   PFe[0][2]= PFe[2][0] = d*w[1]*t[0]*t[0];
   PFe[1][3]= PFe[3][1] = d*w[1]*t[1]*t[1];
-    
+
   return(1);
 }
 
@@ -373,7 +374,7 @@ static int slipon_2d(NSst *nsst,pCsr A) {
   pEdge    pa;
   pCl      pcl;
   double  *a,*b,PNe[4][4],PFe[4][4];
-  int      j,k,l,dof,iga,igb,ier;
+  int      j,k,l,dof,iga,igb;
 
   dof = nsst->info.typ == P1 ? 2 : 3;
 
@@ -388,15 +389,22 @@ static int slipon_2d(NSst *nsst,pCsr A) {
     a = &nsst->mesh.point[pa->v[0]].c[0];
     b = &nsst->mesh.point[pa->v[1]].c[0];
 
-    ier = (nsst->info.typ == P1) ? matPNe_P1(a,b,PNe) : matPNe_P2(a,b,PNe);
-    if ( !ier )  continue;
+    if ( nsst->info.typ == P1 ) {
+      matPNe_P1(a,b,PNe);
+      matPFe_P1(a,b,PFe);
+    }
+    else {
+      matPNe_P2(a,b,PNe);
+      matPFe_P2(a,b,PFe);
+    }
 
     /* P1b P1 */
     for (j=0; j<2; j++) {
       for (l=0; l<2; l++) {
         csrPut(A,iga+j,iga+l,PNe[j][l]);
-        csrPut(A,igb+j,igb+l,PNe[dof+j][dof+l]);
         csrPut(A,iga+j,igb+l,PNe[j][dof+l]);
+
+        csrPut(A,igb+j,igb+l,PNe[dof+j][dof+l]);
         csrPut(A,igb+j,iga+l,PNe[dof+j][l]);
       }
     }
@@ -404,13 +412,12 @@ static int slipon_2d(NSst *nsst,pCsr A) {
     /* global friction term */
     if ( fabs(pcl->u[0]) < NS_EPSD )  continue;
 
-    ier = (nsst->info.typ == P1) ? matPFe_P1(a,b,PFe) : matPFe_P2(a,b,PFe);
-    if ( !ier )  continue;
     for (j=0; j<2; j++) {
       for (l=0; l<2; l++) {
         csrPut(A,iga+j,iga+l,pcl->u[0] * PFe[j][l]);
-        csrPut(A,igb+j,igb+l,pcl->u[0] * PFe[dof+j][dof+l]);
         csrPut(A,iga+j,igb+l,pcl->u[0] * PFe[j][dof+l]);
+
+        csrPut(A,igb+j,igb+l,pcl->u[0] * PFe[dof+j][dof+l]);
         csrPut(A,igb+j,iga+l,pcl->u[0] * PFe[dof+j][l]);
       }
     }
